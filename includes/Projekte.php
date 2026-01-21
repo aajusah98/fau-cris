@@ -145,7 +145,7 @@ class Projekte
         $output = '';
 
         if (shortcode_exists('collapsibles') && $format == 'accordion') {
-            $output .= $this->make_accordion($projList,$hide=$param['projects_hide']);
+            $output .= $this->make_accordion($projList,$hide=$param['hide']);
        }else{
             $output .= $this->make_list($projList, $hide);
         }
@@ -256,7 +256,7 @@ class Projekte
                 if (!empty($param['order2']) && $param['order2']==='title') {
                     uasort($projects, [$this,'project_title_filter']);
                 }
-                $shortcode_data .= do_shortcode('[collapse title="' . $array_year . '"' . $openfirst . ']' . $this->make_accordion($projects,$hide=$param['projects_hide']) . '[/collapse]');
+                $shortcode_data .= do_shortcode('[collapse title="' . $array_year . '"' . $openfirst . ']' . $this->make_accordion($projects,$hide=$param['hide']) . '[/collapse]');
                 $openfirst = '';
             }
 
@@ -336,7 +336,7 @@ class Projekte
                 if (!empty($param['order2']) && $param['order2']==='title') {
                     uasort($projects, [$this,'project_title_filter']);
                  }
-                $shortcode_data .= do_shortcode('[collapse title="' . $title . '"' . $openfirst . ']' . $this->make_accordion($projects,$hide=$param['projects_hide']) . '[/collapse]');
+                $shortcode_data .= do_shortcode('[collapse title="' . $title . '"' . $openfirst . ']' . $this->make_accordion($projects,$hide=$param['hide']) . '[/collapse]');
                 $openfirst = '';
             }
             $output .= do_shortcode('[collapsibles ' . $expandall . ']' . $shortcode_data . '[/collapsibles]');
@@ -391,7 +391,7 @@ class Projekte
         $externalPartnerArray=$ws->by_proj_has_eorg($this->id);
 
         if (is_array($this->id)) {
-            $output = $this->make_list($projArray, $hide=$param['projects_hide']);
+            $output = $this->make_list($projArray, $hide=$param['hide']);
         } else {
             $output = $this->make_single($projArray, $param,$externalPartnerArray);
         }
@@ -723,6 +723,7 @@ class Projekte
             $description = strip_tags($description,Tools::$whitelist_tags);
             $type = Tools::getName('projects', $project['project type'], $this->page_lang);
             $imgs = self::get_project_images($project['ID']);
+            $acronym = $project['cfacro'];
 
             if (count($imgs)) {
                 $projlist .= "<div class=\"cris-image\">";
@@ -736,7 +737,7 @@ class Projekte
             }
 
             if (!in_array('title', $param['hide'])) {
-                $projlist .= "<h3>" . $title . "</h3>";
+                $projlist .= "<h3>" . ((!empty($acronym) && !in_array('acro', $param['hide'])) ? $acronym . ": " : "") . $title . "</h3>";
             }
 
             if (!empty($type)) {
@@ -758,43 +759,42 @@ class Projekte
                 }
                 $start = $project['cfstartdate'];
                 $start = date_i18n(get_option('date_format'), strtotime($start));
-                if (!in_array('end', $param['hide'])) {
-                    $end = (!empty($project['cfenddate'])) ? date_i18n(get_option('date_format'), strtotime($project['cfenddate'])) : '';
-                    $extend = (!empty($project['extension date'])) ? date_i18n(get_option('date_format'), strtotime($project['extension date'])) : '';
-                }
+                
+                $end = (!empty($project['cfenddate'])) ? date_i18n(get_option('date_format'), strtotime($project['cfenddate'])) : '';
+                $extend = (!empty($project['extension date'])) ? date_i18n(get_option('date_format'), strtotime($project['extension date'])) : '';
+                
                 $funding = $this->get_project_funding($id);
                 $url = $project['cfuri'];
-                $acronym = $project['cfacro'];
 
                 $projlist .= "<p class=\"project-details\">";
                 if (!empty($parentprojecttitle)) {
                     $projlist .= "<strong>" . __('Titel des Gesamtprojektes', 'fau-cris') . ': </strong>' . $parentprojecttitle;
                 }
-                if (!empty($leaders)) {
+                if (!empty($leaders) && !in_array('leaders', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Projektleitung', 'fau-cris') . ': </strong>';
                     $projlist .= implode(', ', $leaders);
                 }
-                if (!empty($members)) {
+                if (!empty($members) && !in_array('members', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Projektbeteiligte', 'fau-cris') . ': </strong>';
                     $projlist .= implode(', ', $members);
                 }
-                if (!empty($start)) {
+                if (!empty($start) && !in_array('start', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Projektstart', 'fau-cris') . ': </strong>' . $start;
                 }
-                if (!empty($end)) {
+                if (!empty($end) && !in_array('end', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Projektende', 'fau-cris') . ': </strong>' . $end;
                 }
-                if (!empty($extend)) {
+                if (!empty($extend) && !in_array('extend', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Laufzeitverlängerung bis', 'fau-cris') . ': </strong>' . $extend;
                 }
-                if (!empty($acronym)) {
+                if (!empty($acronym)  && !in_array('acro', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Akronym', 'fau-cris') . ": </strong>" . $acronym;
                 }
-                if (!empty($funding)) {
+                if (!empty($funding) && !in_array('funding', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('Mittelgeber', 'fau-cris') . ': </strong>';
                     $projlist .= implode(', ', $funding);
                 }
-                if (!empty($url)) {
+                if (!empty($url) && !in_array('url', $param['hide'])) {
                     $projlist .= "<br /><strong>" . __('URL', 'fau-cris') . ": </strong><a href=\"" . $url . "\">" . $url . "</a>";
                 }
                 $projlist .= "</p>";
@@ -874,9 +874,10 @@ class Projekte
             $description = str_replace(["\n", "\t", "\r"], '', $description);
             $description = strip_tags($description,Tools::$whitelist_tags);
             $type = Tools::getName('projects', $project['project type'], $this->page_lang);
+            $acronym = $project['cfacro'];
 
             $projlist .= "<li>";
-            $projlist .= "<h3 class=\"project-title\">" . $title . "</h3>";
+            $projlist .= "<h3 class=\"project-title\">" . ((!empty($acronym) && !in_array('acro', $hide)) ? $acronym . ": " : "") . $title . "</h3>";
 
             if (!empty($type) && $showtype == 1) {
                 $projlist .= "<br />(" . $type . ")";
@@ -884,7 +885,6 @@ class Projekte
 
             if (!in_array('details', $hide)) {
                 $parentprojecttitle = ($this->page_lang == 'en' && !empty($project['parentprojecttitle_en'])) ? $project['parentprojecttitle_en'] : $project['parentprojecttitle'];
-                $acronym = $project['cfacro'];
                 $start = $project['cfstartdate'];
                 if (!in_array('end', $hide)) {
                     $end = (!empty($project['extension date'])) ? $project['extension date'] : ((!empty($project['cfenddate'])) ? $project['cfenddate'] : '');
@@ -913,8 +913,10 @@ class Projekte
                 if (!empty($date)) {
                     $projlist .= "<strong>" . __('Laufzeit', 'fau-cris') . ': </strong>' . $date . '<br />';
                 }
+                if (!in_array('acro', $hide)) {
                 if (!empty($acronym)) {
                     $projlist .= "<strong>" . __('Akronym', 'fau-cris') . ": </strong>" . $acronym . '<br />';
+                }
                 }
                 if (!empty($funding)) {
                     $projlist .= "<strong>" . __('Mittelgeber', 'fau-cris') . ': </strong>';
@@ -958,7 +960,6 @@ class Projekte
     private function make_accordion($projects, $hide = array(), $showtype = 1)
     {
         global $post;
-
         $lang_key = ($this->page_lang == 'en') ? '_en' : '';
         $projlist = '[collapsibles]';
 
@@ -999,7 +1000,7 @@ class Projekte
             $type = Tools::getName('projects', $project['project type'], $this->page_lang);
 
 
-            $projlist .= "[collapse title=\"" . ((!empty($acronym)) ? $acronym . ": " : "") . $title . "\"]";
+            $projlist .= "[collapse title=\"" . ((!empty($acronym) && !in_array('acro', $hide)) ? $acronym . ": " : "") . $title . "\"]";
             
             if (!in_array('date', $hide)) {            
             $start = $project['cfstartdate'];
@@ -1019,6 +1020,11 @@ class Projekte
             if (!empty($funding)) {
                 $projlist .= "<strong>" . __('Mittelgeber', 'fau-cris') . ': </strong>';
                 $projlist .= implode(', ', $funding) . '<br />';
+            }
+            }
+            if (!in_array('acro', $hide)) {
+            if (!empty($acronym)) {
+                $projlist .= "<strong>" . __('Akronym', 'fau-cris') . ": </strong>" . $acronym . '<br />';
             }
             }
 
