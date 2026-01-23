@@ -737,7 +737,7 @@ class Projekte
             }
 
             if (!in_array('title', $param['hide'])) {
-                $projlist .= "<h3>" . ((!empty($acronym) && !in_array('acro', $param['hide'])) ? $acronym . ": " : "") . $title . "</h3>";
+                $projlist .= "<h3>" . ((!empty($acronym) && !in_array('acrotitle', $param['hide'])) ? $acronym . ": " : "") . $title . "</h3>";
             }
 
             if (!empty($type)) {
@@ -877,7 +877,7 @@ class Projekte
             $acronym = $project['cfacro'];
 
             $projlist .= "<li>";
-            $projlist .= "<h3 class=\"project-title\">" . ((!empty($acronym) && !in_array('acro', $hide)) ? $acronym . ": " : "") . $title . "</h3>";
+            $projlist .= "<h3 class=\"project-title\">" . ((!empty($acronym) && !in_array('acrotitle', $hide)) ? $acronym . ": " : "") . $title . "</h3>";
 
             if (!empty($type) && $showtype == 1) {
                 $projlist .= "<br />(" . $type . ")";
@@ -1000,7 +1000,7 @@ class Projekte
             $type = Tools::getName('projects', $project['project type'], $this->page_lang);
 
 
-            $projlist .= "[collapse title=\"" . ((!empty($acronym) && !in_array('acro', $hide)) ? $acronym . ": " : "") . $title . "\"]";
+            $projlist .= "[collapse title=\"" . ((!empty($acronym) && !in_array('acrotitle', $hide)) ? $acronym . ": " : "") . $title . "\"]";
             
             if (!in_array('date', $hide)) {            
             $start = $project['cfstartdate'];
