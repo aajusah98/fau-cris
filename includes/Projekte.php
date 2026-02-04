@@ -111,7 +111,8 @@ class Projekte
      * Start::projListe
      */
     public function projListe($param = []): string
-    {
+    {  
+        
         $year = $param['year'] ?: '';
         $start = $param['start'] ?: '';
         $end = $param['end'] ?: '';
@@ -121,7 +122,11 @@ class Projekte
         $role = $param['role'] ?: 'all';
         $status = $param['status'] ?: '';
         $format = (isset($param['format']) && $param['format'] != '') ? $param['format'] : '';
-
+        $field = $param['field'] ?? '';
+        
+        if(!empty($field)){   
+            return $this->fieldProj($param['field'],$param);  
+        }
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
         if (empty($projArray)) {
             return '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
@@ -143,12 +148,15 @@ class Projekte
          }
         
         $output = '';
+       
 
         if (shortcode_exists('collapsibles') && $format == 'accordion') {
             $output .= $this->make_accordion($projList,$hide=$param['hide']);
        }else{
             $output .= $this->make_list($projList, $hide);
         }
+        
+        
 
         
 
@@ -221,7 +229,6 @@ class Projekte
 
     public function projNachJahr($param = array(), $content = ''): string
     {
-
         $year = (isset($param['year']) && $param['year'] != '') ? $param['year'] : '';
         $start = (isset($param['start']) && $param['start'] != '') ? $param['start'] : '';
         $end = (isset($param['end']) && $param['end'] != '') ? $param['end'] : '';
@@ -1397,7 +1404,6 @@ class CRIS_projects extends Webservice
                 __('Bitte geben Sie die CRIS-ID der Organisation, Person oder des Projektes an.', 'fau-cris')
             );
         }
-
         if (!is_array($fieldID)) {
             $fieldID = array($fieldID);
         }
