@@ -153,6 +153,10 @@ class Equipment
         $manufacturer = (isset($param['manufacturer']) && $param['manufacturer'] != '') ? $param['manufacturer'] : '';
         $location = (isset($param['location']) && $param['location'] != '') ? $param['location'] : '';
         $hide = (isset($param['hide']) && !empty($param['hide'])) ? $param['hide'] : array();
+        $field = $param['field'] ?? '';
+         if(!empty($field)){   
+            return $this->field_standardizations($param['field'],$param);  
+        }   
 
         $equiArray = $this->fetch_equipments($manufacturer, $location, $constructionYear, $constructionYearStart, $constructionYearEnd);
 
@@ -656,6 +660,48 @@ class Equipment
         return $fields;
     }
 
+      public function field_standardizations($field, $param = array(), $return = 'list', $seed = false)
+    {
+        $ws = new CRIS_equipments();
+        if ($seed) {
+            $ws->disable_cache();
+        }
+
+        try {
+            $EquiArray = $ws->by_field($field);
+        } catch (Exception $ex) {
+            return new \WP_Error(
+                'cris-standardizations-error',
+                __('Es gab ein Problem beim Abrufen der Standardisierungen.', 'fau-cris'),
+                array('exception' => $ex->getMessage())
+            );
+        }
+
+        if (!count($EquiArray)) {
+            return;
+        }
+
+        if ($return === 'array') {
+            return $EquiArray;
+        }
+
+        // sortiere nach Erscheinungsdatum
+        $firstItem = reset($EquiArray);
+        if ($firstItem && isset($firstItem->attributes['relation right seq'])) {
+            $sortby = 'relation right seq';
+            $orderby = $sortby;
+        } else {
+            $sortby = null;
+            $orderby = __('O.A.', 'fau-cris');
+        }
+
+        $formatter = new Formatter(null, null, $sortby, SORT_ASC);
+        $res = $formatter->execute($EquiArray);
+        $equiList = $res[$orderby] ?? [];
+
+        return $this->make_list($equiList, $param);
+    }
+
     private function get_equipment_projects($equipment): array
     {
         $projects = array();
@@ -741,6 +787,25 @@ class CRIS_equipments extends Webservice
         $requests = array();
         foreach ($awarID as $_p) {
             $requests[] = sprintf('get/equipment/%d', $_p);
+        }
+        return $this->retrieve($requests);
+    }
+
+    public function by_field($fieldID = null)
+    {
+        if ($fieldID === null || $fieldID === "0") {
+            return new \WP_Error(
+                'cris-orgid-error',
+                __('Bitte geben Sie die FIELD-ID des Forschungsbereichs an.', 'fau-cris')
+            );
+        }
+        if (!is_array($fieldID)) {
+            $fieldID = array($fieldID);
+        }
+
+        $requests = array();
+        foreach ($fieldID as $_f) {
+            $requests[] = sprintf('getrelated/Forschungsbereich/%d/fobe_has_equi', $_f);
         }
         return $this->retrieve($requests);
     }
