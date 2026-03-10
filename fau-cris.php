@@ -80,7 +80,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.25.15';
+    const version = '3.25.16';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
