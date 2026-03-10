@@ -456,21 +456,86 @@ class Standardisierungen
             return $StandArray;
         }
 
-        // sortiere nach Erscheinungsdatum
+        // Determine grouping and sorting
+        $group = null;
+        $groupOrder = null;
+        if (isset($param['orderby']) && $param['orderby'] == 'year') {
+            $group = 'year';
+            $groupOrder = SORT_DESC;
+        } elseif (isset($param['orderby']) && $param['orderby'] == 'type') {
+            $group = 'subtype';
+            $groupOrder = SORT_ASC;
+        }
+
+        // sort by relation right seq if available, else by venue_start
         $firstItem = reset($StandArray);
         if ($firstItem && isset($firstItem->attributes['relation right seq'])) {
             $sortby = 'relation right seq';
-            $orderby = $sortby;
+            $sortOrder = SORT_ASC;
         } else {
-            $sortby = null;
-            $orderby = __('O.A.', 'fau-cris');
+            $sortby = 'venue_start';
+            $sortOrder = SORT_DESC;
         }
 
-        $formatter = new Formatter(null, null, $sortby, SORT_ASC);
-        $res = $formatter->execute($StandArray);
-        $standList = $res[$orderby] ?? [];
+        $formatter = new Formatter($group, $groupOrder, $sortby, $sortOrder);
+        $standardizations = $formatter->execute($StandArray);
 
-        return $this->make_list($standList, $param);
+        $isGroupAccordion = ($param['display'] == 'accordion' && in_array($param['orderby'] ?? '', ['year', 'type']));
+        $isSingleAccordion = ($param['display'] == 'accordion' && ($param['orderby'] ?? '') == '');
+
+        $output = '';
+        if ($isGroupAccordion) {
+            $output .= '[collapsibles expand-all-link="true"]';
+        }
+        foreach ($standardizations as $key => $stanGroup) {
+            switch ($param['orderby'] ?? '') {
+                case 'year':
+                    $subtitle = $key;
+                    break;
+                case 'type':
+                    $subtitle = Tools::getTitle('standardizations', $key, $this->page_lang);
+                    break;
+                default:
+                    $subtitle = '';
+            }
+            if ($isGroupAccordion) {
+                $output .= sprintf('[collapse title="%1s" color="%2s" name="%3s"]', $subtitle, $param['accordion_color'], sanitize_title($subtitle));
+            } elseif ($subtitle != '') {
+                $output .= '<h3>' . $subtitle . '</h3>';
+            }
+            if ($param['sc_type'] == 'custom') {
+                $output .= $this->make_custom($stanGroup, $param, '', $isSingleAccordion);
+            } else {
+                if ($isSingleAccordion) {
+                    $output .= $this->make_single($stanGroup, $param, $isSingleAccordion);
+                } else {
+                    $output .= $this->make_list($stanGroup, $param);
+                }
+            }
+            if ($isGroupAccordion) {
+                $output .= '[/collapse]';
+            }
+        }
+        if ($isGroupAccordion) {
+            $output .= '[/collapsibles]';
+        }
+        if ($isGroupAccordion || $isSingleAccordion) {
+            return do_shortcode($this->langdiv_open . $output . $this->langdiv_close);
+        } else {
+            // fallback for flat list
+            $standList = [];
+            // flatten if not grouped
+            foreach ($standardizations as $grouped) {
+                if (is_array($grouped)) {
+                    foreach ($grouped as $item) {
+                        $standList[] = $item;
+                    }
+                } else {
+                    $standList[] = $grouped;
+                }
+            }
+            return $this->make_list($standList, $param, false);
+        }
     }
 }
 
@@ -545,7 +610,7 @@ class CRIS_standardizations extends Webservice
         if ($fieldID === null || $fieldID === "0") {
             return new \WP_Error(
                 'cris-orgid-error',
-                __('Bitte geben Sie die CRIS-ID des Forschungsbereichs an.', 'fau-cris')
+                __('Bitte geben Sie die FIELD-ID des Forschungsbereichs an.', 'fau-cris')
             );
         }
         if (!is_array($fieldID)) {
