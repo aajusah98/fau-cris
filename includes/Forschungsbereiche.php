@@ -283,9 +283,10 @@ class Forschungsbereiche
                 }
                 $singlefield .= "</div>";
             }
-
+            if (!in_array('description', $hide)) {
             $singlefield .= $description;
-
+            }
+            
             if (!in_array('projects', $hide)
                 && !is_array($param['field'])) {
                 $projects = $this->get_field_projects($id,$param);
