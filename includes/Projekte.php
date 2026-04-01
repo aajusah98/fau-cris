@@ -1082,7 +1082,7 @@ class Projekte
             $projlist .= "[/accordion-item]";
         }
         $projlist .= "[/accordion]";
-        return $projlist;
+        return do_shortcode($projlist);
     }
 
     function my_plugin_inline_css() {
