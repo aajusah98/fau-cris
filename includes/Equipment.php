@@ -84,7 +84,7 @@ class Equipment
             return $output;
         }
 
-        $output = $this->make_single($equiArray, $hide, $quotation);
+        $output = $this->make_single($equiArray, $hide, $quotation, 'alignright', 'div');
 
         return $this->langdiv_open . $output . $this->langdiv_close;
     }
@@ -155,7 +155,7 @@ class Equipment
         $hide = (isset($param['hide']) && !empty($param['hide'])) ? $param['hide'] : array();
         $field = $param['field'] ?? '';
          if(!empty($field)){   
-            return $this->field_standardizations($param['field'],$param);  
+            return $this->field_equipments($param['field'],$param);  
         }   
 
         $equiArray = $this->fetch_equipments($manufacturer, $location, $constructionYear, $constructionYearStart, $constructionYearEnd);
@@ -171,7 +171,17 @@ class Equipment
         $res = $formatter->execute($equiArray);
         $equiList = $res[$order];
 
-        $output =  $this->make_list($equiList, $hide);
+        $format = (isset($param['format']) && $param['format'] != '') ? $param['format'] : '';
+        $display = $param['display'] ?? 'list';
+        $accordion_color = $param['accordion_color'] ?? '';
+        $accordion_title = $param['accordion_title'] ?? '';
+        
+        // If format is accordion and shortcode exists, use accordion display
+        if (shortcode_exists('collapsibles') && $format == 'accordion') {
+            $display = 'accordion';
+        }
+        
+        $output =  $this->make_list($equiList, $hide, $display, $accordion_color, $accordion_title);
 
         return $this->langdiv_open . $output . $this->langdiv_close;
     }
@@ -192,9 +202,26 @@ class Equipment
 	 * Returns: html formatted equipment list
 	 *
 	 */
-    private function make_list($equipments, $hide = array()): string
+    private function make_list($equipments, $hide = array(), $display = 'list', $accordion_color = '', $accordion_title = ''): string
     {
-        $equilist = "<ul class=\"cris-equipment\">";
+        if ($display === 'accordion') {
+            return $this->make_accordion_list($equipments, $hide, $accordion_color, $accordion_title);
+        }
+
+        // Determine wrapper and item tags based on display mode
+        if ($display === 'no-list') {
+            $wrapper_open = '<div class="cris-equipments">';
+            $wrapper_close = '</div>';
+            $item_open = '<div class="cris-equipment">';
+            $item_close = '</div>';
+        } else {
+            $wrapper_open = '<ul class="cris-equipment">';
+            $wrapper_close = '</ul>';
+            $item_open = '<li>';
+            $item_close = '</li>';
+        }
+
+        $equilist = $wrapper_open;
         foreach ($equipments as $equipment) {
             $equipment = (array) $equipment;
             foreach ($equipment['attributes'] as $attribut => $v) {
@@ -230,8 +257,12 @@ class Equipment
                 $location = $equipment['standort'];
             }
             //var_dump($manufacturer);
-            $equilist .= "<li>";
-            $equilist .= "<span class=\"equipment-name\">" . $name . "</span>";
+            $equilist .= $item_open;
+            if ($display === 'no-list') {
+                $equilist .= "<strong>" . $name . "</strong>";
+            } else {
+                $equilist .= "<span class=\"equipment-name\">" . $name . "</span>";
+            }
             if ($manufacturer) {
                 $equilist .= '<br />' . $manufacturer;
             }
@@ -249,9 +280,12 @@ class Equipment
             if ($location) {
                 $equilist .= '<br />' . __('Standort', 'fau-cris') . ': ' . $location;
             }
-            $equilist .= "</li>";
+            $equilist .= $item_close;
+            if ($display === 'no-list') {
+                $equilist .= '<br />';
+            }
         }
-        $equilist .= "</ul>";
+        $equilist .= $wrapper_close;
 
         return $equilist;
     }
@@ -264,9 +298,26 @@ class Equipment
 	 * Returns: html formatted single equipment list
 	 *
 	 */
-    private function make_single($equipments, $hide = array(), $quotation = '', $image_align = 'alignright'): string
+    private function make_single($equipments, $hide = array(), $quotation = '', $image_align = 'alignright', $display = 'div', $accordion_color = '', $accordion_title = ''): string
     {
-        $equilist = "<div class=\"cris-equipment\">";
+        if ($display === 'accordion') {
+            return $this->make_accordion_single($equipments, $hide, $accordion_color, $accordion_title);
+        }
+
+        // Determine wrapper based on display mode
+        if ($display === 'no-list') {
+            $wrapper_open = '<div class="cris-equipments">';
+            $wrapper_close = '</div>';
+            $item_open = '<div class="cris-equipment">';
+            $item_close = '</div>';
+        } else {
+            $wrapper_open = '';
+            $wrapper_close = '';
+            $item_open = '<div class="cris-equipment">';
+            $item_close = '</div>';
+        }
+
+        $equilist = $wrapper_open . $item_open;
         foreach ($equipments as $equipment) {
             $equipment = (array) $equipment;
             foreach ($equipment['attributes'] as $attribut => $v) {
@@ -409,8 +460,178 @@ class Equipment
             }
         }
 
-        $equilist .= "</div>";
+        $equilist .= $item_close . $wrapper_close;
         return $equilist;
+    }
+
+	/**
+	 * Name : make_accordion_list
+	 *
+	 * Use: format equipment as accordion list
+	 *
+	 * Returns: accordion shortcode for equipment list
+	 *
+	 */
+    private function make_accordion_list($equipments, $hide = array(), $accordion_color = '', $accordion_title = ''): string
+    {
+        $output = '[collapsibles expand-all-link="true"]';
+        foreach ($equipments as $equipment) {
+            $equipment = (array) $equipment;
+            foreach ($equipment['attributes'] as $attribut => $v) {
+                $equipment[$attribut] = $v;
+            }
+            unset($equipment['attributes']);
+
+            switch ($this->sc_lang) {
+                case 'en':
+                    $name = ($equipment['cfname_en'] != '') ? $equipment['cfname_en'] : $equipment['cfname'];
+                    break;
+                case 'de':
+                default:
+                    $name = ($equipment['cfname'] != '') ? $equipment['cfname'] : $equipment['cfname_en'];
+                    break;
+            }
+            $name = htmlentities($name, ENT_QUOTES);
+
+            $manufacturer = null;
+            $model = null;
+            $constructionYear = null;
+            $location = null;
+            if ($equipment['hersteller'] != '' && !in_array('manufacturer', $hide)) {
+                $manufacturer = $equipment['hersteller'];
+            }
+            if ($equipment['modell'] != '' && !in_array('model', $hide)) {
+                $model = $equipment['modell'];
+            }
+            if ($equipment['baujahr'] != '' && !in_array('constructionYear', $hide)) {
+                $constructionYear = $equipment['baujahr'];
+            }
+            if ($equipment['standort'] != '' && !in_array('location', $hide)) {
+                $location = $equipment['standort'];
+            }
+
+            $output .= sprintf('[collapse title="%1s" color="%2s" name="%3s"]', $name, $accordion_color, sanitize_title($name));
+            $output .= "<strong>" . $name . "</strong><br />";
+            if ($manufacturer) {
+                $output .= $manufacturer;
+            }
+            if ($model) {
+                if ($manufacturer) {
+                    $output .= ': ';
+                } else {
+                    $output .= '<br />';
+                }
+                $output .= $model;
+            }
+            if ($constructionYear) {
+                $output .= ' (' . __('Bj.', 'fau-cris') . ' ' . $constructionYear . ')';
+            }
+            if ($location) {
+                $output .= '<br />' . __('Standort', 'fau-cris') . ': ' . $location;
+            }
+            $output .= '[/collapse]';
+        }
+        $output .= '[/collapsibles]';
+
+        return do_shortcode($output);
+    }
+
+	/**
+	 * Name : make_accordion_single
+	 *
+	 * Use: format single equipment as accordion
+	 *
+	 * Returns: accordion shortcode for single equipment
+	 *
+	 */
+    private function make_accordion_single($equipments, $hide = array(), $accordion_color = '', $accordion_title = ''): string
+    {
+        $output = '[collapsibles expand-all-link="true"]';
+        foreach ($equipments as $equipment) {
+            $equipment = (array) $equipment;
+            foreach ($equipment['attributes'] as $attribut => $v) {
+                $equipment[$attribut] = $v;
+            }
+            unset($equipment['attributes']);
+
+            $id = $equipment['ID'];
+            switch ($this->sc_lang) {
+                case 'en':
+                    $name = ($equipment['cfname_en'] != '') ? $equipment['cfname_en'] : $equipment['cfname'];
+                    $description = ($equipment['description_en'] != '') ? $equipment['description_en'] : $equipment['description'];
+                    break;
+                case 'de':
+                default:
+                    $name = ($equipment['cfname'] != '') ? $equipment['cfname'] : $equipment['cfname_en'];
+                    $description = ($equipment['description'] != '') ? $equipment['description'] : $equipment['description_en'];
+                    break;
+            }
+            $name = htmlentities($name, ENT_QUOTES);
+            $description = str_replace(["\n", "\t", "\r"], '', $description);
+            $description = strip_tags($description, Tools::$whitelist_tags);
+            $manufacturer  = $equipment['hersteller'];
+            $model = $equipment['modell'];
+            $constructionYear = $equipment['baujahr'];
+            $location = $equipment['standort'];
+            $url = $equipment['url'];
+            $year = $equipment['year'];
+
+            $output .= sprintf('[collapse title="%1s" color="%2s" name="%3s"]', $name, $accordion_color, sanitize_title($name));
+
+            if (!in_array('name', (array)$hide)) {
+                $output .= "<h3>" . $name . "</h3>";
+            }
+
+            if (!in_array('image', (array)$hide)) {
+                $imgs = self::get_equipment_images($id);
+                if (count($imgs)) {
+                    $output .= "<div class=\"cris-image wp-caption\">";
+                    foreach ($imgs as $img) {
+                        $img_description = ($img['desc'] != '' ? "<p class=\"wp-caption-text\">" . $img['desc'] . "</p>" : '');
+                        if (isset($img['png180']) && mb_strlen($img['png180']) > 30) {
+                            $output .= "<img alt=\"" . htmlentities($img_description, ENT_QUOTES) . "\" src=\"" . $img['png180'] . "\" width=\"\" height=\"\">" . $img_description;
+                        }
+                    }
+                    $output .= "</div>";
+                }
+            }
+
+            if ($description && !in_array('description', (array)$hide)) {
+                $output .= "<div class=\"equipment-description\">" . $description . '</div>';
+            }
+            if (!in_array('details', $hide)) {
+                $output .= "<div class=\"equipment-details\">";
+                if (!in_array('manufacturer', (array)$hide) && !empty($manufacturer)) {
+                    $output .= "<strong>" . __('Hersteller', 'fau-cris') . ': </strong>' . $manufacturer;
+                }
+                if (!in_array('model', (array)$hide) && !empty($model)) {
+                    $output .= "<br /><strong>" . __('Modell', 'fau-cris') . ': </strong>' . $model;
+                }
+                if (!in_array('constructionYear', (array)$hide) && !empty($constructionYear)) {
+                    $output .= "<br /><strong>" . __('Baujahr', 'fau-cris') . ': </strong>' . $constructionYear;
+                }
+                if (!in_array('location', (array)$hide) && !empty($location)) {
+                    $output .= "<br /><strong>" . __('Standort', 'fau-cris') . ': </strong>' . $location;
+                }
+                if (!in_array('url', (array)$hide) && !empty($url)) {
+                    $output .= "<br /><strong>" . __('URL', 'fau-cris') . ': </strong>' . $url;
+                }
+                if (!in_array('year', (array)$hide) && !empty($year)) {
+                    $output .= "<br /><strong>" . __('Jahr', 'fau-cris') . ': </strong>' . $year;
+                }
+                if (!in_array('funding', $hide)) {
+                    $funding = $this->get_equipment_funding($id);
+                    if ($funding) {
+                        $output .=  "<br /><strong>" . __('Mittelgeber', 'fau-cris') . ": </strong>" . implode(', ', $funding);
+                    }
+                }
+                $output .= "</div>";
+            }
+            $output .= '[/collapse]';
+        }
+        $output .= '[/collapsibles]';
+
+        return do_shortcode($output);
     }
 
 	/**
@@ -660,7 +881,7 @@ class Equipment
         return $fields;
     }
 
-      public function field_standardizations($field, $param = array(), $return = 'list', $seed = false)
+      public function field_equipments($field, $param = array(), $return = 'list', $seed = false)
     {
         $ws = new CRIS_equipments();
         if ($seed) {
@@ -699,7 +920,18 @@ class Equipment
         $res = $formatter->execute($EquiArray);
         $equiList = $res[$orderby] ?? [];
 
-        return $this->make_list($equiList, $param);
+        $format = (isset($param['format']) && $param['format'] != '') ? $param['format'] : '';
+        $hide = $param['hide'] ?? array();
+        $display = $param['display'] ?? 'list';
+        $accordion_color = $param['accordion_color'] ?? '';
+        $accordion_title = $param['accordion_title'] ?? '';
+        
+        // If format is accordion and shortcode exists, use accordion display
+        if (shortcode_exists('collapsibles') && $format == 'accordion') {
+            $display = 'accordion';
+        }
+        
+        return $this->make_list($equiList, $hide, $display, $accordion_color, $accordion_title);
     }
 
     private function get_equipment_projects($equipment): array

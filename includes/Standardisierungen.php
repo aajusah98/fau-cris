@@ -115,6 +115,13 @@ class Standardisierungen
         $sortOrder = SORT_DESC;
         $formatter = new Formatter($group, $groupOrder, $sort, $sortOrder);
         $standardizations = $formatter->execute($standardizationArray);
+        
+        // Check format parameter for accordion support
+        $format = (isset($param['format']) && $param['format'] != '') ? $param['format'] : '';
+        if (shortcode_exists('collapsibles') && $format == 'accordion') {
+            $param['display'] = 'accordion';
+        }
+        
         $isGroupAccordion = ($param['display'] == 'accordion' && in_array($param['orderby'], ['year', 'type']));
         $isSingleAccordion = ($param['display'] == 'accordion' && $param['orderby'] == '');
 
@@ -479,6 +486,12 @@ class Standardisierungen
 
         $formatter = new Formatter($group, $groupOrder, $sortby, $sortOrder);
         $standardizations = $formatter->execute($StandArray);
+
+        // Check format parameter for accordion support
+        $format = (isset($param['format']) && $param['format'] != '') ? $param['format'] : '';
+        if (shortcode_exists('collapsibles') && $format == 'accordion') {
+            $param['display'] = 'accordion';
+        }
 
         $isGroupAccordion = ($param['display'] == 'accordion' && in_array($param['orderby'] ?? '', ['year', 'type']));
         $isSingleAccordion = ($param['display'] == 'accordion' && ($param['orderby'] ?? '') == '');
