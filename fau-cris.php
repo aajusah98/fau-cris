@@ -19,7 +19,7 @@ use RRZE\Cris\Sync;
 /**
  * Plugin Name: FAU CRIS
  * Description: Anzeige von Daten aus dem FAU-Forschungsportal CRIS in WP-Seiten
- * Version: 3.28.1
+ * Version: 3.29.1
  * Author: RRZE-Webteam
  * Author URI: http://blogs.fau.de/webworking/
  * Text Domain: fau-cris
@@ -80,7 +80,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.28.1';
+    const version = '3.29.1';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
@@ -1142,6 +1142,13 @@ public static function options_fau_cris(): void
                 return $liste->awardsNachJahr($parameter);
             }
             return $liste->awardsListe($parameter, '');
+        } elseif (isset($parameter['show']) && $parameter['show'] == 'map') {
+            // Visualization (Maps)
+            $vis = new Visualization($parameter['mapid'], $page_lang, $parameter['size']);
+            if ($vis->error && is_wp_error($vis->error)) {
+                return '<div class="cris-error">' . $vis->error->get_error_message() . '</div>';
+            }
+            return $vis->display($parameter['fullscreen']);
         } else {
             // Publications
             $liste = new Publikationen($parameter['entity'], $parameter['entity_id'], $parameter['name_order_plugin'], $page_lang, $parameter['display_language']);
@@ -1319,7 +1326,10 @@ public static function options_fau_cris(): void
             'author_position'=>'',
             'publicationsum'=>'',
             'useprojpubls'=>'false',
-            'listtype'=>'ul'
+            'listtype'=>'ul',
+            'mapid' => '',
+            'size' => 'm',
+            'fullscreen' => 'false'
         ];
 
         // Attributes
@@ -1391,6 +1401,9 @@ public static function options_fau_cris(): void
         $sc_param['publicationsum'] = sanitize_text_field($publicationsum);
         $sc_param['useprojpubls'] = strtolower(sanitize_text_field($useprojpubls));
         $sc_param['listtype'] = strtolower(sanitize_text_field($listtype));
+        $sc_param['mapid'] = sanitize_text_field($mapid);
+        $sc_param['size'] = in_array(sanitize_text_field($size), ['s', 'm', 'l']) ? sanitize_text_field($size) : 'm';
+        $sc_param['fullscreen'] = in_array(strtolower(sanitize_text_field($fullscreen)), ['true', '1', 'yes']) ? true : false;
         switch ($sortby) {
             case 'created':
                 $sc_param['sortby'] = 'updatedon';
