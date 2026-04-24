@@ -1343,6 +1343,14 @@ class Dicts
                         'de' => array('name' => 'EDV-Kommission'),
                         'en' => array('name' => 'EDP committee'),
                     ),
+                    'InternalFAUFunction_RRZE_board' => array(
+                        'de' => array('name' => 'Mitglied im Beirat des RRZE'),
+                        'en' => array('name' => 'Board member of RRZE'),
+                    ),
+                    'InternalFAUFunction_CIOIO' => array(
+                        'de' => array('name' => 'Mitglied im CIO/IO Gremium'),
+                        'en' => array('name' => 'Member of CIO/IO board'),
+                    )
                 )
             ),
             'Organisation einer Tagung / Konferenz' => array(
