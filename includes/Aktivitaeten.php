@@ -347,7 +347,6 @@ class Aktivitaeten
                 $namesList[] = Tools::get_person_link($persname['id'], $firstname, $lastname, $this->cris_activities_link, $this->cms, $this->pathPersonenseiteUnivis, $this->univis, 0);
             }
             $names_html = implode(", ", $namesList);
-
             $activity_id = $activity['ID'];
             $activity_type = Tools::getName('activities', $activity['type of activity'], $this->sc_lang);
             setlocale(LC_TIME, get_locale());

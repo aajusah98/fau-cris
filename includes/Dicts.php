@@ -1339,7 +1339,7 @@ class Dicts
                         'de' => array('name' => 'Interdisziplinäres Zentrum (Vorstandsmitglied)'),
                         'en' => array('name' => 'Interdisziplinary Center (Board member)'),
                     ),
-                    'EDP committee' => array(
+                    'EDV-Kommission' => array(
                         'de' => array('name' => 'EDV-Kommission'),
                         'en' => array('name' => 'EDP committee'),
                     ),
