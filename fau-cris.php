@@ -19,7 +19,7 @@ use RRZE\Cris\Sync;
 /**
  * Plugin Name: FAU CRIS
  * Description: Anzeige von Daten aus dem FAU-Forschungsportal CRIS in WP-Seiten
- * Version: 3.29.3
+ * Version: 3.29.4
  * Author: RRZE-Webteam
  * Author URI: http://blogs.fau.de/webworking/
  * Text Domain: fau-cris
@@ -80,7 +80,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.29.3';
+    const version = '3.29.4';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
@@ -1145,7 +1145,7 @@ public static function options_fau_cris(): void
         } elseif (isset($parameter['show']) && ($parameter['show'] == 'visualisation' || $parameter['show'] == 'map')) {
             // Visualization (Maps and Networks)
             $vis_id = $parameter['visualisationid'] ?: $parameter['mapid'];
-            $vis = new Visualization($vis_id, $page_lang, $parameter['size'], $parameter['fullscreen']);
+            $vis = new Visualization($vis_id, $page_lang, $parameter['size'], $parameter['fullscreenlink']);
             if ($vis->error && is_wp_error($vis->error)) {
                 return '<div class="cris-error">' . $vis->error->get_error_message() . '</div>';
             }
@@ -1331,7 +1331,7 @@ public static function options_fau_cris(): void
             'visualisationid' => '',
             'mapid' => '', // Backwards compatibility
             'size' => 'm',
-            'fullscreen' => 'false'
+            'fullscreenlink' => 'false'
         ];
 
         // Attributes
@@ -1406,7 +1406,7 @@ public static function options_fau_cris(): void
         $sc_param['visualisationid'] = sanitize_text_field($visualisationid);
         $sc_param['mapid'] = sanitize_text_field($mapid); // Backwards compatibility
         $sc_param['size'] = in_array(sanitize_text_field($size), ['s', 'm', 'l']) ? sanitize_text_field($size) : 'm';
-        $sc_param['fullscreen'] = in_array(strtolower(sanitize_text_field($fullscreen)), ['true', '1', 'yes']) ? true : false;
+        $sc_param['fullscreenlink'] = in_array(strtolower(sanitize_text_field($fullscreenlink)), ['true', '1', 'yes']) ? true : false;
         switch ($sortby) {
             case 'created':
                 $sc_param['sortby'] = 'updatedon';

@@ -16,7 +16,7 @@ class Visualization
     private float $latitude = 0;
     private float $longitude = 0;
     private int $zoom = 4;
-    private bool $fullscreen = false;
+    private bool $fullscreenlink = false;
     public \WP_Error|null $error = null;
 
     private const SIZE_MAP = [
@@ -35,13 +35,13 @@ class Visualization
      * @param string $vis_id Visualization ID (mapid)
      * @param string $page_lang Page language (unused, kept for backwards compatibility)
      * @param string $size Size option ('s', 'm', or 'l')
-     * @param bool $fullscreen Enable fullscreen button (default: false)
+     * @param bool $fullscreenlink Enable fullscreen link button (default: false)
      */
-    public function __construct(string $vis_id = '', string $page_lang = 'de', string $size = self::DEFAULT_SIZE, bool $fullscreen = false)
+    public function __construct(string $vis_id = '', string $page_lang = 'de', string $size = self::DEFAULT_SIZE, bool $fullscreenlink = false)
     {
         $this->vis_id = sanitize_text_field($vis_id);
         $this->size = isset(self::SIZE_MAP[$size]) ? $size : self::DEFAULT_SIZE;
-        $this->fullscreen = $fullscreen;
+        $this->fullscreenlink = $fullscreenlink;
 
         if (empty($this->vis_id)) {
             $this->error = new \WP_Error(
@@ -131,13 +131,11 @@ class Visualization
 
     /**
      * Render the visualization
-     * 
-     * @param bool $fullscreen Override fullscreen setting (deprecated, use constructor parameter)
+     *
      * @return string HTML output or error message
      */
-    public function display(bool $fullscreen = false): string
+    public function display(): string
     {
-        // Return error if visualization is invalid
         if ($this->error) {
             return sprintf(
                 '<div class="cris-error">%s: %s</div>',
@@ -146,9 +144,8 @@ class Visualization
             );
         }
 
-        // Return iframe with optional fullscreen button
         $html = $this->render_iframe();
-        if ($this->fullscreen) {
+        if ($this->fullscreenlink) {
             $html .= $this->render_fullscreen_button();
         }
         return $html;
