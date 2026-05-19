@@ -269,7 +269,7 @@ class Patente
 
         try {
             $patentArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -305,7 +305,7 @@ class Patente
             if ($this->einheit === "person") {
                 $patentArray = $ws->by_pers_id($this->id, $filter);
             }
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $patentArray = array();
         }
         return $patentArray;

@@ -271,7 +271,7 @@ class Aktivitaeten
 
         try {
             $activityArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -309,7 +309,7 @@ class Aktivitaeten
             if ($this->einheit === "person") {
                 $activityArray = $ws->by_pers_id($this->id, $filter);
             }
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $activityArray = array();
         }
         return $activityArray;

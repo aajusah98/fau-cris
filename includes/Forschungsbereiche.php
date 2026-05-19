@@ -117,7 +117,7 @@ class Forschungsbereiche
         $ws = new CRIS_fields();
         try {
             $fieldsArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($fieldsArray)) {
@@ -139,7 +139,7 @@ class Forschungsbereiche
 
         try {
             $fieldsArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -210,7 +210,7 @@ class Forschungsbereiche
             /*if ($this->einheit === "person") {
                 $pubArray = $ws->by_pers_id($this->id, $filter);
             }*/
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $pubArray = array();
         }
 

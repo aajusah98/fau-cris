@@ -388,7 +388,7 @@ class Projekte
         $ws = new CRIS_projects();
         try {
             $projArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -424,7 +424,7 @@ class Projekte
         $ws = new CRIS_projects();
         try {
             $projArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -455,7 +455,7 @@ class Projekte
         }
         try {
             $projArray = $ws->by_pub($pub);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($projArray)) {
@@ -1102,7 +1102,7 @@ class Projekte
         }
         try {
             $projArray = $ws->by_field($field);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($projArray)) {
@@ -1146,7 +1146,7 @@ class Projekte
         $ws = new CRIS_projects();
         try {
             $projArray = $ws->by_field($field);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($projArray)) {

@@ -60,7 +60,7 @@ class Organisation
         $ws = new CRIS_organisations();
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -82,7 +82,7 @@ class Organisation
         $ws = new CRIS_organisations();
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -102,7 +102,7 @@ class Organisation
         }
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($orgaArray)) {
@@ -146,7 +146,7 @@ class Organisation
 
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $awardArray = array();
         }
         return $awardArray;

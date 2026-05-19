@@ -279,7 +279,7 @@ class Auszeichnungen
 
         try {
             $awardArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -306,7 +306,7 @@ class Auszeichnungen
         $ws = new CRIS_awards();
         try {
             $awardArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -348,7 +348,7 @@ class Auszeichnungen
             if ($this->einheit === "awardnameid") {
                 $awardArray = $ws->by_awardtype_id($this->id, $filter);
             }
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $awardArray = array();
         }
         return $awardArray;

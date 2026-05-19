@@ -73,7 +73,7 @@ class Standardisierungen
 
         try {
             $standardizationArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -433,7 +433,7 @@ class Standardisierungen
             if ($this->einheit === "person") {
                 $standardizationArray = $ws->by_pers_id($this->id, $filter);
             }
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $standardizationArray = array();
         }
         return $standardizationArray;
@@ -448,7 +448,7 @@ class Standardisierungen
 
         try {
             $StandArray = $ws->by_field($field);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return new \WP_Error(
                 'cris-standardizations-error',
                 __('Es gab ein Problem beim Abrufen der Standardisierungen.', 'fau-cris'),

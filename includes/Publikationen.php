@@ -613,7 +613,7 @@ class Publikationen
 
         try {
             $pubArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -776,7 +776,7 @@ class Publikationen
         }
         try {
             $pubArray = $ws->by_equipment($equipment);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
