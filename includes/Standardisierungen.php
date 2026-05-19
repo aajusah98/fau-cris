@@ -24,6 +24,7 @@ class Standardisierungen
     public $langdiv_open;
     public $sc_lang;
     public $langdiv_close;
+    public \WP_Error|null $error = null;
 
 
 

@@ -25,6 +25,7 @@ class Auszeichnungen
     public $langdiv_open;
     public $sc_lang;
     public $langdiv_close;
+    public \WP_Error|null $error = null;
     public function __construct($einheit = '', $id = '', $page_lang = 'de', $sc_lang = 'de')
     {
         if (isset($_SERVER['PHP_SELF']) && strpos(sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])), "vkdaten/tools/")) {

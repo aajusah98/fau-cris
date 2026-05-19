@@ -23,6 +23,7 @@ class Projekte
     public $cris_project_link;
     public $page_lang;
     public $einheit;
+    public \WP_Error|null $error = null;
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de')
     {

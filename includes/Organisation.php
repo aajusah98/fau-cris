@@ -20,6 +20,7 @@ class Organisation
     public $langdiv_open;
     public $sc_lang;
     public $langdiv_close;
+    public \WP_Error|null $error = null;
 
 
     public function __construct($einheit = 'orga', $id = '', $page_lang = 'de', $sc_lang = 'de')

@@ -26,6 +26,7 @@ class Forschungsbereiche
     public $langdiv_open;
     public $sc_lang;
     public $langdiv_close;
+    public \WP_Error|null $error = null;
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de', $sc_lang = 'de')
     {
