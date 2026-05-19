@@ -91,7 +91,7 @@ class Auszeichnungen
 
         $awardArray = $this->fetch_awards($year, $start, $end, $type, $awardnameid);
         if (!count($awardArray)) {
-            $output = '<p>' . __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -140,7 +140,7 @@ class Auszeichnungen
         $awardArray = $this->fetch_awards($year, $start, $end, $type, $awardnameid);
 
         if (!count($awardArray)) {
-            $output = '<p>' . __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -211,7 +211,7 @@ class Auszeichnungen
         $awardArray = $this->fetch_awards($year, $start, $end, $type, $awardnameid);
 
         if (!count($awardArray)) {
-            $output = '<p>' . __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -285,7 +285,7 @@ class Auszeichnungen
         }
 
         if (!count($awardArray)) {
-            $output = '<p>' . __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -312,7 +312,7 @@ class Auszeichnungen
         }
 
         if (!count($awardArray)) {
-            $output = '<p>' . __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Auszeichnungen gefunden.', 'fau-cris'));
             return $output;
         }
 

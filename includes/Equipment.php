@@ -82,7 +82,7 @@ class Equipment
         }
 
         if (!count($equiArray)) {
-            $output = '<p>' . __('Es wurde leider kein Equipment gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurde leider kein Equipment gefunden.', 'fau-cris'));
             return $output;
         }
 

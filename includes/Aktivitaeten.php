@@ -97,7 +97,7 @@ class Aktivitaeten
             return $output;
        }
        elseif(!count($activityArray)){
-           $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+           $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
               return $output;
        }
         $order = "sortdate";
@@ -139,7 +139,7 @@ class Aktivitaeten
             return $output;
        }
        elseif(!count($activityArray)){
-           $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+           $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
               return $output;
        }
 
@@ -205,7 +205,7 @@ class Aktivitaeten
             return $output;
        }
        elseif(!count($activityArray)){
-           $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+           $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
               return $output;
        }
 
@@ -277,7 +277,7 @@ class Aktivitaeten
         }
 
         if (!count($activityArray)) {
-            $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
             return $output;
         }
 

@@ -97,7 +97,7 @@ class Patente
         $patentArray = $this->fetch_patents($year, $start, $end, $type);
 
         if (!count($patentArray)) {
-            $output = '<p>' . __('Es wurden leider keine Patente gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Patente gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -140,7 +140,7 @@ class Patente
         $patentArray = $this->fetch_patents($year, $start, $end, $type);
 
         if (!count($patentArray)) {
-            $output = '<p>' . __('Es wurden leider keine Patente gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Patente gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -204,7 +204,7 @@ class Patente
         $patentArray = $this->fetch_patents($year, $start, $end, $type);
 
         if (!count($patentArray)) {
-            $output = '<p>' . __('Es wurden leider keine Patente gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Patente gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -275,7 +275,7 @@ class Patente
         }
 
         if (!count($patentArray)) {
-            $output = '<p>' . __('Es wurden leider keine Patente gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Patente gefunden.', 'fau-cris'));
             return $output;
         }
 

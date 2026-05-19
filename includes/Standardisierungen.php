@@ -79,7 +79,7 @@ class Standardisierungen
         }
 
         if (!count($standardizationArray)) {
-            $output = '<p>' . __('Es wurde leider kein Eintrag gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurde leider kein Eintrag gefunden.', 'fau-cris'));
             return $output;
         }
 

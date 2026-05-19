@@ -66,7 +66,7 @@ class Organisation
         }
 
         if (!count($orgaArray)) {
-            $output = '<p>' . __('Es wurden leider keine Informationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Informationen gefunden.', 'fau-cris'));
             return $output;
         }
         $output = $this->make_single($orgaArray, $hide, $image_align);
@@ -88,7 +88,7 @@ class Organisation
         }
 
         if (!count($orgaArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         $output = $this->make_custom_single($orgaArray, $content, $image_align);
@@ -107,7 +107,7 @@ class Organisation
             return;
         }
         if (!count($orgaArray)) {
-            $output = '<p>' . __('Es wurden leider keine Informationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Informationen gefunden.', 'fau-cris'));
             return $output;
         }
         $research_contacts = array();

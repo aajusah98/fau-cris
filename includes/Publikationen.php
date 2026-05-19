@@ -124,7 +124,7 @@ class Publikationen
         $pubArray = $this->fetch_publications($year, $start, $end, $type, $subtype, $fau, $peerreviewed, $notable, $field='',$language,$fsp=false,$project='',$authorPositionArray);
 
         if (!count($pubArray)) {
-            $output = '<p>' . __('Es wurden leider keine Publikationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Publikationen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -210,7 +210,7 @@ class Publikationen
         $pubArray = $this->fetch_publications($year, $start, $end, $type, $subtype, $fau, $peerreviewed, $notable, $field, $language, $fsp, $project,$authorPositionArray );
 
         if (!count($pubArray)) {
-            $output = '<p>' . __('Es wurden leider keine Publikationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Publikationen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -400,7 +400,7 @@ class Publikationen
         
 
         if (!count($pubArray)) {
-            $output = '<p>' . __('Es wurden leider keine Publikationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Publikationen gefunden.', 'fau-cris'));
             return $output;
         }
 

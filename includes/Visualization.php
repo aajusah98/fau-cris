@@ -137,10 +137,30 @@ class Visualization
     public function display(): string
     {
         if ($this->error) {
+            // Service-failure error codes get the friendly "unavailable" notice;
+            // config-actionable codes (cris-vis-id-error, cris-vis-not-found,
+            // cris-vis-type-error) keep their specific message.
+            $serviceCodes = [
+                'cris-xml-empty',
+                'cris-xml-error',
+                'cris-xml-parse',
+                'cris-unexpected-root',
+                'cris-fetch-failed',
+                'cris-vis-fetch-error',
+                'http_request_failed',
+            ];
+            if (in_array($this->error->get_error_code(), $serviceCodes, true)) {
+                return '<div class="cris-error">'
+                    . esc_html__(
+                        'Die CRIS-Daten sind momentan nicht verfügbar. Bitte versuchen Sie es später erneut.',
+                        'fau-cris'
+                    )
+                    . '</div>';
+            }
             return sprintf(
                 '<div class="cris-error">%s: %s</div>',
-                __('Visualization Error', 'fau-cris'),
-                $this->error->get_error_message()
+                esc_html__('Visualization Error', 'fau-cris'),
+                esc_html($this->error->get_error_message())
             );
         }
 

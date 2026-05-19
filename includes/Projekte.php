@@ -131,7 +131,7 @@ class Projekte
         }
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
         if (empty($projArray)) {
-            return '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            return Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
         }
         
         // sortiere nach Erscheinungsdatum
@@ -190,7 +190,7 @@ class Projekte
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         foreach ($projArray as $id) {
@@ -243,7 +243,7 @@ class Projekte
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         
@@ -312,7 +312,7 @@ class Projekte
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         
@@ -394,7 +394,7 @@ class Projekte
         }
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         $externalPartnerArray=$ws->by_proj_has_eorg($this->id);
@@ -430,7 +430,7 @@ class Projekte
         }
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
 
