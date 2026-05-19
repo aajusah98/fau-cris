@@ -640,7 +640,7 @@ class CRIS_awards extends Webservice
      * awards/grants requests
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
             return new \WP_Error(
@@ -660,7 +660,7 @@ class CRIS_awards extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null) {
+    public function by_pers_id($persID = null, &$filter = null): array|\WP_Error {
         if ($persID === null || $persID === "0") {
 	        return new \WP_Error(
 		        'cris-orgid-error',
@@ -679,7 +679,7 @@ class CRIS_awards extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($awarID = null): array
+    public function by_id($awarID = null): array|\WP_Error
     {
         if ($awarID === null || $awarID === "0") {
 	        return new \WP_Error(
@@ -699,7 +699,7 @@ class CRIS_awards extends Webservice
         return $this->retrieve($requests);
     }
 
-    public function by_awardtype_id($awatID = null): array
+    public function by_awardtype_id($awatID = null): array|\WP_Error
     {
         if ($awatID === null || $awatID === "0") {
 	        return new \WP_Error(

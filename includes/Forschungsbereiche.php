@@ -556,7 +556,7 @@ class CRIS_fields extends Webservice
      * publication requests, supports multiple organisation ids given as array.
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
 	        return new \WP_Error(
@@ -576,7 +576,7 @@ class CRIS_fields extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null): array
+    public function by_pers_id($persID = null, &$filter = null): array|\WP_Error
     {
         if ($persID === null || $persID === "0") {
 	        return new \WP_Error(
@@ -596,10 +596,13 @@ class CRIS_fields extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($fieldID = null): array
+    public function by_id($fieldID = null): array|\WP_Error
     {
         if ($fieldID === null || $fieldID === "0") {
-            throw new Exception('Please supply valid field of research ID');
+            return new \WP_Error(
+                'cris-fieldid-error',
+                __('Bitte geben Sie eine gültige Forschungsfeld-ID an.', 'fau-cris')
+            );
         }
 
         if (!is_array($fieldID)) {

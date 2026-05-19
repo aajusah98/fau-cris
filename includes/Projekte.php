@@ -1337,7 +1337,7 @@ class CRIS_projects extends Webservice
      * projects requests
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
             return new \WP_Error(
@@ -1358,7 +1358,7 @@ class CRIS_projects extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null, $role = 'all'): array
+    public function by_pers_id($persID = null, &$filter = null, $role = 'all'): array|\WP_Error
     {
         if ($persID === null || $persID === "0") {
             return new \WP_Error(
@@ -1385,7 +1385,7 @@ class CRIS_projects extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($projID = null): array
+    public function by_id($projID = null): array|\WP_Error
     {
         if ($projID === null || $projID === "0") {
             return new \WP_Error(

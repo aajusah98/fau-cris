@@ -600,7 +600,7 @@ class CRIS_activities extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($awarID = null): array
+    public function by_id($awarID = null): array|\WP_Error
     {
         if ($awarID === null || $awarID === "0") {
             return  new \WP_Error(

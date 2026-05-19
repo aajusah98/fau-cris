@@ -1559,7 +1559,7 @@ class CRIS_publications extends Webservice
      * publication requests, supports multiple organisation ids given as array.
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0" || $orgaID === "") {
             return new \WP_Error(
@@ -1582,7 +1582,7 @@ class CRIS_publications extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null, $notable = 0): array
+    public function by_pers_id($persID = null, &$filter = null, $notable = 0): array|\WP_Error
     {
         if ($persID === null || $persID === "0") {
             return new \WP_Error(
@@ -1608,7 +1608,7 @@ class CRIS_publications extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($publID = null): array
+    public function by_id($publID = null): array|\WP_Error
     {
         if ($publID === null || $publID === "0") {
             return new \WP_Error(

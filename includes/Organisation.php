@@ -249,7 +249,7 @@ class CRIS_organisations extends Webservice
      * projects requests
      */
 
-    public function by_id($orgaID = null): array
+    public function by_id($orgaID = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
 	       return new \WP_Error(
