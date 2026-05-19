@@ -25,6 +25,7 @@ class Standardisierungen
     public $sc_lang;
     public $langdiv_close;
     public \WP_Error|null $error = null;
+    public ?\WP_Error $fetchError = null;
 
 
 
@@ -436,6 +437,17 @@ class Standardisierungen
         } catch (\Throwable $ex) {
             $standardizationArray = array();
         }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($standardizationArray)) {
+            $this->fetchError = $standardizationArray;
+            $standardizationArray = [];
+        } elseif ($ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
+        }
+
         return $standardizationArray;
     }
 
@@ -645,11 +657,23 @@ class CRIS_standardizations extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $standardizations = array();

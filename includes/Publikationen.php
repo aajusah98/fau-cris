@@ -33,6 +33,7 @@ class Publikationen
     public $einheit; 
     public $error; 
     public $cris_pub_title_link_order;
+    public ?\WP_Error $fetchError = null;
     public function __construct($einheit = '', $id = '', $nameorder = '', $page_lang = 'de', $sc_lang = 'de')
     {
 
@@ -866,6 +867,16 @@ class Publikationen
             if ($this->einheit === "publication") {
                 $pubArray = $ws->by_id($this->id);
             }
+        }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($pubArray)) {
+            $this->fetchError = $pubArray;
+            $pubArray = [];
+        } elseif (isset($ws) && $ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
         }
 
         return $pubArray;
@@ -1715,11 +1726,23 @@ class CRIS_publications extends Webservice
             $filter = new Filter($filter);
         }
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $publs = array();

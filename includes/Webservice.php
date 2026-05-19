@@ -22,6 +22,14 @@ class Webservice
      */
     private bool $cache = true;
 
+    /**
+     * Last fetch error from get(). Set whenever get() returns a WP_Error or
+     * a retrieve() loop aggregates only failures. Renderers can read this to
+     * distinguish "service unavailable" from "request succeeded but returned
+     * zero results".
+     */
+    public ?\WP_Error $lastError = null;
+
     private function fetch($url)
     {
         return RemoteGet::retrieveContent($url);
@@ -37,8 +45,14 @@ class Webservice
         $this->cache = true;
     }
 
+    public function hasFetchFailure(): bool
+    {
+        return $this->lastError instanceof \WP_Error;
+    }
+
     public function get($id, &$filter)
     {
+        $this->lastError = null;
         /*
          * Initiate ws request and return parsed data (XML -> PHP object)
          *
@@ -78,6 +92,7 @@ class Webservice
 
         $xmlobj = XML::element($xml);
         if (is_wp_error($xmlobj)) {
+            $this->lastError = $xmlobj;
             return $xmlobj;
         }
 
@@ -87,7 +102,7 @@ class Webservice
         $rootName = strtolower($xmlobj->getName());
         $allowedRoots = ['wsdata', 'infoobject', 'infoobjects'];
         if (!in_array($rootName, $allowedRoots, true)) {
-            return new \WP_Error(
+            $this->lastError = new \WP_Error(
                 'cris-unexpected-root',
                 sprintf(
                     /* translators: %s: unexpected XML root element name */
@@ -95,6 +110,7 @@ class Webservice
                     $rootName
                 )
             );
+            return $this->lastError;
         }
 
         # build envelope array if necessary

@@ -26,6 +26,7 @@ class Aktivitaeten
     public $sc_lang;
     public $langdiv_close;
     public $error;
+    public ?\WP_Error $fetchError = null;
 
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de', $sc_lang = 'de')
@@ -312,6 +313,17 @@ class Aktivitaeten
         } catch (\Throwable $ex) {
             $activityArray = array();
         }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($activityArray)) {
+            $this->fetchError = $activityArray;
+            $activityArray = [];
+        } elseif ($ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
+        }
+
         return $activityArray;
     }
 
@@ -630,11 +642,23 @@ class CRIS_activities extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $activities = array();

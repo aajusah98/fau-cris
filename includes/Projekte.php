@@ -24,6 +24,7 @@ class Projekte
     public $page_lang;
     public $einheit;
     public \WP_Error|null $error = null;
+    public ?\WP_Error $fetchError = null;
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de')
     {
@@ -524,6 +525,16 @@ class Projekte
             } elseif ($this->einheit == "person") {
                 $awardArray = $ws->by_pers_id($this->id, $filter, $role);
             }
+        }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($awardArray)) {
+            $this->fetchError = $awardArray;
+            $awardArray = [];
+        } elseif (isset($ws) && $ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
         }
 
         return $awardArray;
@@ -1475,11 +1486,23 @@ class CRIS_projects extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $projects = array();

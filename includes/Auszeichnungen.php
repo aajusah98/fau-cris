@@ -26,6 +26,7 @@ class Auszeichnungen
     public $sc_lang;
     public $langdiv_close;
     public \WP_Error|null $error = null;
+    public ?\WP_Error $fetchError = null;
     public function __construct($einheit = '', $id = '', $page_lang = 'de', $sc_lang = 'de')
     {
         if (isset($_SERVER['PHP_SELF']) && strpos(sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])), "vkdaten/tools/")) {
@@ -351,6 +352,17 @@ class Auszeichnungen
         } catch (\Throwable $ex) {
             $awardArray = array();
         }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($awardArray)) {
+            $this->fetchError = $awardArray;
+            $awardArray = [];
+        } elseif ($ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
+        }
+
         return $awardArray;
     }
 
@@ -727,12 +739,25 @@ class CRIS_awards extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
         }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
+        }
+
         $awards = array();
 
         foreach ($data as $_d) {
