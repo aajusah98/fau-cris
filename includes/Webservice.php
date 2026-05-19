@@ -81,6 +81,22 @@ class Webservice
             return $xmlobj;
         }
 
+        // Reject obviously-wrong response shapes (e.g. HTTP 200 with an HTML
+        // maintenance page, which is well-formed XML but isn't CRIS data and
+        // would otherwise be cached for 6 hours as if it were a real response).
+        $rootName = strtolower($xmlobj->getName());
+        $allowedRoots = ['wsdata', 'infoobject', 'infoobjects'];
+        if (!in_array($rootName, $allowedRoots, true)) {
+            return new \WP_Error(
+                'cris-unexpected-root',
+                sprintf(
+                    /* translators: %s: unexpected XML root element name */
+                    __('Unexpected CRIS response root element: %s', 'fau-cris'),
+                    $rootName
+                )
+            );
+        }
+
         # build envelope array if necessary
         if (empty($xmlobj->infoObject)) {
             return array($xmlobj);
