@@ -301,7 +301,7 @@ class CRIS_organisations extends Webservice
         if (empty($data) && $hadFailure) {
             $this->lastError = $this->lastError ?: new \WP_Error(
                 'cris-fetch-failed',
-                __('CRIS data is currently unavailable.', 'fau-cris')
+                __('Data is currently unavailable.', 'fau-cris')
             );
         } else {
             $this->lastError = null;

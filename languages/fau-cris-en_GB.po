@@ -857,8 +857,8 @@ msgid "Publikation"
 msgstr "Publication"
 
 #: includes/Tools.php includes/Visualization.php
-msgid "Die CRIS-Daten sind momentan nicht verfügbar. Bitte versuchen Sie es später erneut."
-msgstr "CRIS data is currently unavailable. Please try again later."
+msgid "Die Daten sind momentan nicht verfügbar. Bitte versuchen Sie es später erneut."
+msgstr "Data is currently unavailable. Please try again later."
 
 #: includes/Forschungsbereiche.php
 msgid "Bitte geben Sie eine gültige Forschungsfeld-ID an."
