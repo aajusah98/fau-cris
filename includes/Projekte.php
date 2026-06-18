@@ -23,6 +23,8 @@ class Projekte
     public $cris_project_link;
     public $page_lang;
     public $einheit;
+    public \WP_Error|null $error = null;
+    public ?\WP_Error $fetchError = null;
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de')
     {
@@ -129,7 +131,7 @@ class Projekte
         }
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
         if (empty($projArray)) {
-            return '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            return Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
         }
         
         // sortiere nach Erscheinungsdatum
@@ -188,7 +190,7 @@ class Projekte
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         foreach ($projArray as $id) {
@@ -241,7 +243,7 @@ class Projekte
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         
@@ -310,7 +312,7 @@ class Projekte
         $projArray = $this->fetch_projects($year, $start, $end, $type, $role, $status);
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         
@@ -387,12 +389,12 @@ class Projekte
         $ws = new CRIS_projects();
         try {
             $projArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         $externalPartnerArray=$ws->by_proj_has_eorg($this->id);
@@ -423,12 +425,12 @@ class Projekte
         $ws = new CRIS_projects();
         try {
             $projArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
         if (!count($projArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -454,7 +456,7 @@ class Projekte
         }
         try {
             $projArray = $ws->by_pub($pub);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($projArray)) {
@@ -523,6 +525,16 @@ class Projekte
             } elseif ($this->einheit == "person") {
                 $awardArray = $ws->by_pers_id($this->id, $filter, $role);
             }
+        }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($awardArray)) {
+            $this->fetchError = $awardArray;
+            $awardArray = [];
+        } elseif (isset($ws) && $ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
         }
 
         return $awardArray;
@@ -1101,7 +1113,7 @@ class Projekte
         }
         try {
             $projArray = $ws->by_field($field);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($projArray)) {
@@ -1145,7 +1157,7 @@ class Projekte
         $ws = new CRIS_projects();
         try {
             $projArray = $ws->by_field($field);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($projArray)) {
@@ -1337,7 +1349,7 @@ class CRIS_projects extends Webservice
      * projects requests
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
             return new \WP_Error(
@@ -1358,7 +1370,7 @@ class CRIS_projects extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null, $role = 'all'): array
+    public function by_pers_id($persID = null, &$filter = null, $role = 'all'): array|\WP_Error
     {
         if ($persID === null || $persID === "0") {
             return new \WP_Error(
@@ -1385,7 +1397,7 @@ class CRIS_projects extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($projID = null): array
+    public function by_id($projID = null): array|\WP_Error
     {
         if ($projID === null || $projID === "0") {
             return new \WP_Error(
@@ -1474,11 +1486,23 @@ class CRIS_projects extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('Data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $projects = array();

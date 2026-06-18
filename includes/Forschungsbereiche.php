@@ -26,6 +26,8 @@ class Forschungsbereiche
     public $langdiv_open;
     public $sc_lang;
     public $langdiv_close;
+    public \WP_Error|null $error = null;
+    public ?\WP_Error $fetchError = null;
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de', $sc_lang = 'de')
     {
@@ -80,7 +82,7 @@ class Forschungsbereiche
         $fieldsArray = $this->fetch_fields();
 
         if (!count($fieldsArray)) {
-            $output = '<p>' . __('Es wurden leider keine Forschungsbereiche gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Forschungsbereiche gefunden.', 'fau-cris'));
             return $output;
         }
         $firstItem = reset($fieldsArray);
@@ -116,7 +118,7 @@ class Forschungsbereiche
         $ws = new CRIS_fields();
         try {
             $fieldsArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($fieldsArray)) {
@@ -138,7 +140,7 @@ class Forschungsbereiche
 
         try {
             $fieldsArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -209,8 +211,18 @@ class Forschungsbereiche
             /*if ($this->einheit === "person") {
                 $pubArray = $ws->by_pers_id($this->id, $filter);
             }*/
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $pubArray = array();
+        }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($pubArray)) {
+            $this->fetchError = $pubArray;
+            $pubArray = [];
+        } elseif ($ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
         }
 
         return $pubArray;
@@ -556,7 +568,7 @@ class CRIS_fields extends Webservice
      * publication requests, supports multiple organisation ids given as array.
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
 	        return new \WP_Error(
@@ -576,7 +588,7 @@ class CRIS_fields extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null): array
+    public function by_pers_id($persID = null, &$filter = null): array|\WP_Error
     {
         if ($persID === null || $persID === "0") {
 	        return new \WP_Error(
@@ -596,10 +608,13 @@ class CRIS_fields extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($fieldID = null): array
+    public function by_id($fieldID = null): array|\WP_Error
     {
         if ($fieldID === null || $fieldID === "0") {
-            throw new Exception('Please supply valid field of research ID');
+            return new \WP_Error(
+                'cris-fieldid-error',
+                __('Bitte geben Sie eine gültige Forschungsfeld-ID an.', 'fau-cris')
+            );
         }
 
         if (!is_array($fieldID)) {
@@ -640,11 +655,23 @@ class CRIS_fields extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('Data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $fields = array();
