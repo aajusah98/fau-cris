@@ -1383,14 +1383,11 @@ class Dicts
                         'de' => array('name' => 'Accreditation review committee (Membership)'),
                         'en' => array('name' => 'Prüfkommission (Mitglied)'),
                 ),
-                'Executive Board of the University' => array(
+                    'Executive Board of the University' => array(
                         'de' => array('name' => 'Executive Board'),
                         'en' => array('name' => 'Universitätsleitung'),
-                )
-
-
-
-
+                    )
+                ),
             ),
             'Organisation einer Tagung / Konferenz' => array(
                 'order' => 2,
