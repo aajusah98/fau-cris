@@ -26,6 +26,7 @@ class Aktivitaeten
     public $sc_lang;
     public $langdiv_close;
     public $error;
+    public ?\WP_Error $fetchError = null;
 
 
     public function __construct($einheit = '', $id = '', $page_lang = 'de', $sc_lang = 'de')
@@ -96,7 +97,7 @@ class Aktivitaeten
             return $output;
        }
        elseif(!count($activityArray)){
-           $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+           $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
               return $output;
        }
         $order = "sortdate";
@@ -138,7 +139,7 @@ class Aktivitaeten
             return $output;
        }
        elseif(!count($activityArray)){
-           $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+           $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
               return $output;
        }
 
@@ -204,7 +205,7 @@ class Aktivitaeten
             return $output;
        }
        elseif(!count($activityArray)){
-           $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+           $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
               return $output;
        }
 
@@ -271,12 +272,12 @@ class Aktivitaeten
 
         try {
             $activityArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
         if (!count($activityArray)) {
-            $output = '<p>' . __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Aktivitäten gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -309,9 +310,20 @@ class Aktivitaeten
             if ($this->einheit === "person") {
                 $activityArray = $ws->by_pers_id($this->id, $filter);
             }
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $activityArray = array();
         }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($activityArray)) {
+            $this->fetchError = $activityArray;
+            $activityArray = [];
+        } elseif ($ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
+        }
+
         return $activityArray;
     }
 
@@ -599,7 +611,7 @@ class CRIS_activities extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($awarID = null): array
+    public function by_id($awarID = null): array|\WP_Error
     {
         if ($awarID === null || $awarID === "0") {
             return  new \WP_Error(
@@ -629,11 +641,23 @@ class CRIS_activities extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $activities = array();

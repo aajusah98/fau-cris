@@ -20,6 +20,8 @@ class Organisation
     public $langdiv_open;
     public $sc_lang;
     public $langdiv_close;
+    public \WP_Error|null $error = null;
+    public ?\WP_Error $fetchError = null;
 
 
     public function __construct($einheit = 'orga', $id = '', $page_lang = 'de', $sc_lang = 'de')
@@ -59,12 +61,12 @@ class Organisation
         $ws = new CRIS_organisations();
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
         if (!count($orgaArray)) {
-            $output = '<p>' . __('Es wurden leider keine Informationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Informationen gefunden.', 'fau-cris'));
             return $output;
         }
         $output = $this->make_single($orgaArray, $hide, $image_align);
@@ -81,12 +83,12 @@ class Organisation
         $ws = new CRIS_organisations();
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
         if (!count($orgaArray)) {
-            $output = '<p>' . __('Es wurden leider keine Projekte gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Projekte gefunden.', 'fau-cris'));
             return $output;
         }
         $output = $this->make_custom_single($orgaArray, $content, $image_align);
@@ -101,11 +103,11 @@ class Organisation
         }
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
         if (!count($orgaArray)) {
-            $output = '<p>' . __('Es wurden leider keine Informationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Informationen gefunden.', 'fau-cris'));
             return $output;
         }
         $research_contacts = array();
@@ -145,9 +147,19 @@ class Organisation
 
         try {
             $orgaArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             $awardArray = array();
         }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($orgaArray)) {
+            $this->fetchError = $orgaArray;
+        } elseif ($ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
+        }
+
         return $awardArray;
     }
 
@@ -249,7 +261,7 @@ class CRIS_organisations extends Webservice
      * projects requests
      */
 
-    public function by_id($orgaID = null): array
+    public function by_id($orgaID = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0") {
 	       return new \WP_Error(
@@ -276,11 +288,23 @@ class CRIS_organisations extends Webservice
         }
 
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('CRIS data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $organisations = array();

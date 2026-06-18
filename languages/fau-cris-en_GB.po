@@ -855,3 +855,11 @@ msgstr "External Partners"
 #: class_Publikationen.php:264
 msgid "Publikation"
 msgstr "Publication"
+
+#: includes/Tools.php includes/Visualization.php
+msgid "Die CRIS-Daten sind momentan nicht verfügbar. Bitte versuchen Sie es später erneut."
+msgstr "CRIS data is currently unavailable. Please try again later."
+
+#: includes/Forschungsbereiche.php
+msgid "Bitte geben Sie eine gültige Forschungsfeld-ID an."
+msgstr "Please provide a valid field-of-research ID."
