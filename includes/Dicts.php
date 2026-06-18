@@ -1191,11 +1191,11 @@ class Dicts
                         'de' => array('name' => 'Fachbereichsleitung'),
                         'en' => array('name' => 'Speaker of the Faculty'),
                     ),
-                    'Library Commettee (Presidency)' => array(
+                    'Library Committee' => array(
                         'de' => array('name' => 'Bibliotheksausschuss (Vorsitz)'),
                         'en' => array('name' => 'Library Commettee (Presidency)'),
                     ),
-                    'Library Commettee (Membership)' => array(
+                    'Library Committee (Member)' => array(
                         'de' => array('name' => 'Bibliotheksausschuss (Mitglied)'),
                         'en' => array('name' => 'Library Commettee (Membership)'),
                     ),
@@ -1207,7 +1207,7 @@ class Dicts
                         'de' => array('name' => 'Fakultätsvorstand (Vorsitz)'),
                         'en' => array('name' => 'Faculty Management Board (Presidency)'),
                     ),
-                    'Fakultätsvorstand (Mitglied)' => array(
+                    'Faculty Management Board (Membership)' => array(
                         'de' => array('name' => 'Fakultätsvorstand (Mitglied)'),
                         'en' => array('name' => 'Faculty Management Board (Membership)'),
                     ),
@@ -1275,11 +1275,11 @@ class Dicts
                         'de' => array('name' => 'Fakultätsrat (Mitglied)'),
                         'en' => array('name' => 'Board of the Faculty (Membership)'),
                     ),
-                    'Board of Research / Young academics (Membership)' => array(
+                    'Board of Research/ Young academics (Membership)' => array(
                         'de' => array('name' => 'Kommission Forschung / wissenschaftl. Nachwuchs (Mitglied)'),
                         'en' => array('name' => 'Board of Research / Young academics (Membership)'),
                     ),
-                    'Board of Research / Young academics (Presidency)' => array(
+                    'Board of Research/ Young academics (Presidency)' => array(
                         'de' => array('name' => 'Kommission Forschung / wissenschaftl. Nachwuchs (Vorsitz)'),
                         'en' => array('name' => 'Board of Research / Young academics (Presidency)'),
                     ),
@@ -1293,13 +1293,13 @@ class Dicts
                     ),
                     'Senat (Presidency)' => array(
                         'de' => array('name' => 'Senat (Vorsitz)'),
-                        'en' => array('name' => 'Senat (Presidency)'),
+                        'en' => array('name' => 'Senate (Presidency)'),
                     ),
                     'Management Board / Speaker of a FAU-Central Institute\')' => array(
                         'de' => array('name' => 'Kollegiale Leitung / Sprecher/in eines FAU-Zentralinstituts'),
                         'en' => array('name' => 'Management Board / Speaker of a FAU-Central Institute'),
                     ),
-                    'Speaker of SFB, GRK or elite program' => array(
+                    'SFB / GRK / Elite (Sprecher)' => array(
                         'de' => array('name' => 'Sprecher für SFB, GRK oder Elitestudiengang'),
                         'en' => array('name' => 'Speaker of SFB, GRK or elite program'),
                     ),
@@ -1307,15 +1307,15 @@ class Dicts
                         'de' => array('name' => 'Zentrales Gremium Verwendung Studienbeiträge'),
                         'en' => array('name' => 'Central Board on Disposition of the Tuition Fees'),
                     ),
-                    'Decentralised Board on Disposition of the Tuition Fees' => array(
+                    'Decentralised Board on Disposition of the Tuition Fees (Membership)' => array(
                         'de' => array('name' => 'Dezentrales Gremium zur Verwendung der Studienbeiträge'),
                         'en' => array('name' => 'Decentralised Board on Disposition of the Tuition Fees'),
                     ),
-                    'Interdisziplinary Center (Speaker)' => array(
+                    'Interdisziplinary Center - speaker' => array(
                         'de' => array('name' => 'Interdisziplinäres Zentrum (Sprecher/in)'),
                         'en' => array('name' => 'Interdisziplinary Center (Speaker)'),
                     ),
-                    'Interdisziplinary Center (Member)' => array(
+                    'Interdisziplinary Center - member' => array(
                         'de' => array('name' => 'Interdisziplinäres Zentrum (Mitglied)'),
                         'en' => array('name' => 'Interdisziplinary Center (Member)'),
                     ),
@@ -1335,7 +1335,7 @@ class Dicts
                         'de' => array('name' => 'Prodekan'),
                         'en' => array('name' => 'Vice Dean'),
                     ),
-                    'Interdisziplinary Center (Board member)' => array(
+                    'Interdisziplinary Center - board' => array(
                         'de' => array('name' => 'Interdisziplinäres Zentrum (Vorstandsmitglied)'),
                         'en' => array('name' => 'Interdisziplinary Center (Board member)'),
                     ),
@@ -1350,8 +1350,47 @@ class Dicts
                     'InternalFAUFunction_CIOIO' => array(
                         'de' => array('name' => 'Mitglied im CIO/IO Gremium'),
                         'en' => array('name' => 'Member of CIO/IO board'),
-                    )
+                    ),
+                    'Berufungskommission, Vorsitz' => array(
+                        'de' => array('name' => 'Berufungskommission (Vorsitz)'),
+                        'en' => array('name' => 'Appointment Committee (Presidency)'),
+                    ),
+                    'Berufungskommission, Mitglied' => array(
+                        'de' => array('name' => 'Berufungskommission (Mitglied)'),
+                        'en' => array('name' => 'Appointment Committee (Member)'),
+                ),
+                'InternalFAUFunction_electionsCommittee' => array(
+                        'de' => array('name' => 'Elections Committee'),
+                        'en' => array('name' => 'Mitglied im Wahlausschuss (Hochschulwahl)'),
+                ),
+                'Membership' => array(
+                        'de' => array('name' => 'Membership'),
+                        'en' => array('name' => 'Mitgliedschaft'),
+                ),
+                'Coordination AG' => array(
+                        'de' => array('name' => 'Working group coordinator'),
+                        'en' => array('name' => 'Koordinator einer Arbeitsgruppe'),
+                ),
+                'Collegium member' => array(
+                        'de' => array('name' => 'Collegiate member'),
+                        'en' => array('name' => 'Mitglied des Kollegiums'),
+                ),
+                'Accreditation review committee (Presidency)' => array(
+                        'de' => array('name' => 'Accreditation review committee (Presidency)'),
+                        'en' => array('name' => 'Prüfkommission (Vorsitz)'),
+                ),
+                'Accreditation review committee (Membership)' => array(
+                        'de' => array('name' => 'Accreditation review committee (Membership)'),
+                        'en' => array('name' => 'Prüfkommission (Mitglied)'),
+                ),
+                'Executive Board of the University' => array(
+                        'de' => array('name' => 'Executive Board'),
+                        'en' => array('name' => 'Universitätsleitung'),
                 )
+
+
+
+
             ),
             'Organisation einer Tagung / Konferenz' => array(
                 'order' => 2,
