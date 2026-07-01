@@ -132,6 +132,24 @@ class Tools
         return XML::element($content);
     }
 
+    /**
+     * Return the appropriate "no data" paragraph for a renderer's empty-result
+     * branch: the friendly "CRIS unavailable" notice when a fetch error is
+     * present, the entity-specific "nothing found" message otherwise.
+     */
+    public static function no_data_message(?\WP_Error $fetchError, string $emptyMessage): string
+    {
+        if ($fetchError instanceof \WP_Error) {
+            return '<p class="cris-error">'
+                . esc_html__(
+                    'Die CRIS-Daten sind momentan nicht verfügbar. Bitte versuchen Sie es später erneut.',
+                    'fau-cris'
+                )
+                . '</p>';
+        }
+        return '<p>' . $emptyMessage . '</p>';
+    }
+
     /*
      * Array sortieren
      */

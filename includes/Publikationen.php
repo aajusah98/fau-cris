@@ -33,6 +33,7 @@ class Publikationen
     public $einheit; 
     public $error; 
     public $cris_pub_title_link_order;
+    public ?\WP_Error $fetchError = null;
     public function __construct($einheit = '', $id = '', $nameorder = '', $page_lang = 'de', $sc_lang = 'de')
     {
 
@@ -123,7 +124,7 @@ class Publikationen
         $pubArray = $this->fetch_publications($year, $start, $end, $type, $subtype, $fau, $peerreviewed, $notable, $field='',$language,$fsp=false,$project='',$authorPositionArray);
 
         if (!count($pubArray)) {
-            $output = '<p>' . __('Es wurden leider keine Publikationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Publikationen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -209,7 +210,7 @@ class Publikationen
         $pubArray = $this->fetch_publications($year, $start, $end, $type, $subtype, $fau, $peerreviewed, $notable, $field, $language, $fsp, $project,$authorPositionArray );
 
         if (!count($pubArray)) {
-            $output = '<p>' . __('Es wurden leider keine Publikationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Publikationen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -399,7 +400,7 @@ class Publikationen
         
 
         if (!count($pubArray)) {
-            $output = '<p>' . __('Es wurden leider keine Publikationen gefunden.', 'fau-cris') . '</p>';
+            $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Publikationen gefunden.', 'fau-cris'));
             return $output;
         }
 
@@ -613,7 +614,7 @@ class Publikationen
 
         try {
             $pubArray = $ws->by_id($this->id);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -776,7 +777,7 @@ class Publikationen
         }
         try {
             $pubArray = $ws->by_equipment($equipment);
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             return;
         }
 
@@ -866,6 +867,16 @@ class Publikationen
             if ($this->einheit === "publication") {
                 $pubArray = $ws->by_id($this->id);
             }
+        }
+
+        // Propagate fetch error for renderer message branching.
+        if (is_wp_error($pubArray)) {
+            $this->fetchError = $pubArray;
+            $pubArray = [];
+        } elseif (isset($ws) && $ws->lastError instanceof \WP_Error) {
+            $this->fetchError = $ws->lastError;
+        } else {
+            $this->fetchError = null;
         }
 
         return $pubArray;
@@ -1559,7 +1570,7 @@ class CRIS_publications extends Webservice
      * publication requests, supports multiple organisation ids given as array.
      */
 
-    public function by_orga_id($orgaID = null, &$filter = null): array
+    public function by_orga_id($orgaID = null, &$filter = null): array|\WP_Error
     {
         if ($orgaID === null || $orgaID === "0" || $orgaID === "") {
             return new \WP_Error(
@@ -1582,7 +1593,7 @@ class CRIS_publications extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_pers_id($persID = null, &$filter = null, $notable = 0): array
+    public function by_pers_id($persID = null, &$filter = null, $notable = 0): array|\WP_Error
     {
         if ($persID === null || $persID === "0") {
             return new \WP_Error(
@@ -1608,7 +1619,7 @@ class CRIS_publications extends Webservice
         return $this->retrieve($requests, $filter);
     }
 
-    public function by_id($publID = null): array
+    public function by_id($publID = null): array|\WP_Error
     {
         if ($publID === null || $publID === "0") {
             return new \WP_Error(
@@ -1715,11 +1726,23 @@ class CRIS_publications extends Webservice
             $filter = new Filter($filter);
         }
         $data = array();
+        $hadFailure = false;
         foreach ($reqs as $_i) {
             $_data = $this->get($_i, $filter);
-            if (!is_wp_error($_data)) {
-                $data[] = $_data;
+            if (is_wp_error($_data)) {
+                $hadFailure = true;
+                continue;
             }
+            $data[] = $_data;
+        }
+
+        if (empty($data) && $hadFailure) {
+            $this->lastError = $this->lastError ?: new \WP_Error(
+                'cris-fetch-failed',
+                __('Data is currently unavailable.', 'fau-cris')
+            );
+        } else {
+            $this->lastError = null;
         }
 
         $publs = array();
