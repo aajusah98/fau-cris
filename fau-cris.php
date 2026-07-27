@@ -19,7 +19,7 @@ use RRZE\Cris\Sync;
 /**
  * Plugin Name: FAU CRIS
  * Description: Anzeige von Daten aus dem FAU-Forschungsportal CRIS in WP-Seiten
- * Version: 3.29.12
+ * Version: 3.29.13
  * Author: RRZE-Webteam
  * Author URI: http://blogs.fau.de/webworking/
  * Text Domain: fau-cris
@@ -80,7 +80,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.29.12';
+    const version = '3.29.13';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
@@ -118,6 +118,8 @@ class FAU_CRIS
 
         add_action('update_option_' . self::option_name, array(__CLASS__, 'cris_cron'), 10, 2);
         add_action('cris_auto_update', array(__CLASS__, 'cris_auto_sync'));
+
+        self::update_version();
     }
 
     /**
@@ -172,7 +174,37 @@ class FAU_CRIS
     public static function update_version(): void
     {
         if (get_option(self::version_option_name, null) != self::version) {
+            self::cleanup_transients();
             update_option(self::version_option_name, self::version);
+        }
+    }
+
+    /**
+     * One-time cleanup of accumulated CRIS transients, run once per version
+     * bump. Removes index-tracked keys (object-cache safe) and sweeps legacy
+     * cris_* transients created before the key index existed. On multisite this
+     * runs per site as each site is first loaded after the update. Legacy
+     * entries on installs with a persistent object cache are not enumerable and
+     * will simply expire on their own (max 6h); new code prevents recurrence.
+     */
+    private static function cleanup_transients(): void
+    {
+        \RRZE\Cris\Cache::flush();
+
+        global $wpdb;
+        $like = $wpdb->esc_like('_transient_cris_') . '%';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $names = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+                $like
+            )
+        );
+        foreach ((array) $names as $optionName) {
+            $transient = substr($optionName, strlen('_transient_'));
+            // delete_transient() removes both the data and the timeout row and
+            // invalidates any object-cache entry.
+            delete_transient($transient);
         }
     }
 
@@ -1591,6 +1623,10 @@ public static function options_fau_cris(): void
 
     public static function cris_cron(): void
     {
+        // A settings change may alter which CRIS data is shown; invalidate the
+        // plugin cache so stale responses are not served after reconfiguration.
+        \RRZE\Cris\Cache::flush();
+
         $options = get_option('_fau_cris');
         if (isset($options['cris_sync_check'])
                 && $options['cris_sync_check'] != 1) {
