@@ -21,7 +21,6 @@ class Sustainability
     public $output;
     public $cms;
     public $id;
-    public $einheit;
     public $page_lang;
     public $sc_lang;
     public $langdiv_open;
@@ -30,7 +29,7 @@ class Sustainability
     public \WP_Error|null $error = null;
     public ?\WP_Error $fetchError = null;
 
-    public function __construct($einheit = 'sdg', $id = '', $page_lang = 'de', $sc_lang = 'de')
+    public function __construct($id = '', $page_lang = 'de', $sc_lang = 'de')
     {
         if (isset($_SERVER['PHP_SELF']) && strpos(sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])), "vkdaten/tools/")) {
             $this->cms = 'wbk';
@@ -48,27 +47,45 @@ class Sustainability
         }
 
         $this->id = $id;
-        $this->einheit = "sdg";
         $this->page_lang = $page_lang;
         $this->sc_lang = $sc_lang;
         $this->name_order_plugin = $this->options['cris_name_order_plugin'] ?? 'firstname-lastname';
-        $this->langdiv_open = '<div class="cris">';
+        // The plugin-slug class "fau-cris" is the CSS namespace; "cris" is kept
+        // alongside it because existing page and theme styles target that class.
+        $this->langdiv_open = '<div class="fau-cris cris">';
         $this->langdiv_close = '</div>';
         if ($sc_lang != $this->page_lang) {
-            $this->langdiv_open = '<div class="cris" lang="' . $sc_lang . '">';
+            $this->langdiv_open = '<div class="fau-cris cris" lang="' . esc_attr($sc_lang) . '">';
         }
     }
 
     /*
      * Ausgabe eines einzelnen Nachhaltigkeitsziels.
      */
-    public function singleSDG($hide = '')
+    public function singleSDG($hide = '', $hstart = 2)
     {
         $ws = new CRIS_sdgs();
         try {
             $sdgArray = $ws->by_id($this->id);
         } catch (\Throwable $ex) {
-            return;
+            // The exception must not silently produce empty output: log it and
+            // fall through to the regular error message below, so that editors
+            // can see what happened.
+            do_action(
+                'rrze.log.error',
+                'Plugin: {plugin} Exception: {exception}',
+                [
+                    'plugin' => 'fau-cris',
+                    'exception' => $ex->getMessage(),
+                    'method' => 'Sustainability::singleSDG',
+                    'sdg' => $this->id
+                ]
+            );
+            $this->fetchError = new \WP_Error(
+                'cris-sdg-fetch-failed',
+                __('CRIS-Anfrage fehlgeschlagen.', 'fau-cris')
+            );
+            $sdgArray = array();
         }
 
         // Propagate fetch error for renderer message branching.
@@ -81,10 +98,10 @@ class Sustainability
 
         if (!count($sdgArray)) {
             $output = Tools::no_data_message($this->fetchError, __('Es wurden leider keine Informationen gefunden.', 'fau-cris'));
-            return $output;
+            return $this->langdiv_open . $output . $this->langdiv_close;
         }
 
-        $output = $this->make_single($sdgArray, $hide);
+        $output = $this->make_single($sdgArray, $hide, $hstart);
 
         return $this->langdiv_open . $output . $this->langdiv_close;
     }
@@ -93,9 +110,13 @@ class Sustainability
      * Private Functions
       ======================================================================== */
 
-    private function make_single($sdgs, $hide = ''): string
+    private function make_single($sdgs, $hide = '', $hstart = 2): string
     {
         $hidden = is_array($hide) ? array_map('trim', $hide) : array_map('trim', explode(',', (string) $hide));
+        // Heading levels follow the page structure: hstart sets the main
+        // heading, sub-headings sit one level below it.
+        $hTitle = min(max(absint($hstart) ?: 2, 1), 6);
+        $hSub = min($hTitle + 1, 6);
         $output = "<div class=\"cris-sdg\">";
 
         foreach ($sdgs as $sdg) {
@@ -117,7 +138,7 @@ class Sustainability
                 if ($name !== '') {
                     $heading .= ($code !== '' ? ' &ndash; ' : '') . esc_html($name);
                 }
-                $output .= "<h2 class=\"cris-sdg-title\">" . $heading . "</h2>";
+                $output .= "<h{$hTitle} class=\"cris-sdg-title\">" . $heading . "</h{$hTitle}>";
             }
 
             // Langname als (eingeklapptes) Akkordeon, Beschreibung als Inhalt.
@@ -130,14 +151,14 @@ class Sustainability
                     $output .= do_shortcode('[collapsibles]' . $collapse . '[/collapsibles]');
                 } else {
                     if ($namelong !== '') {
-                        $output .= "<h3 class=\"cris-sdg-namelong\">" . esc_html($namelong) . "</h3>";
+                        $output .= "<h{$hSub} class=\"cris-sdg-namelong\">" . esc_html($namelong) . "</h{$hSub}>";
                     }
                     $output .= $body;
                 }
             }
 
             if (!in_array('persons', $hidden, true)) {
-                $output .= $this->make_persons($sdg['ID']);
+                $output .= $this->make_persons($sdg['ID'], $hSub);
             }
         }
 
@@ -192,7 +213,7 @@ class Sustainability
     /*
      * GreenOffice-freigegebene Personen zum Nachhaltigkeitsziel.
      */
-    private function make_persons($sdgID): string
+    private function make_persons($sdgID, $hSub = 3): string
     {
         $persons = $this->get_sdg_persons($sdgID);
         if (!count($persons)) {
@@ -200,7 +221,7 @@ class Sustainability
         }
 
         $output = "<div class=\"cris-sdg-persons\">";
-        $output .= "<h3 class=\"cris-sdg-persons-title\">" . esc_html__('Beitragende Wissenschaftler/-innen', 'fau-cris') . "</h3>";
+        $output .= "<h{$hSub} class=\"cris-sdg-persons-title\">" . esc_html__('Beitragende Wissenschaftler/-innen', 'fau-cris') . "</h{$hSub}>";
         $output .= "<ul class=\"cris-sdg-persons-list\">";
 
         foreach ($persons as $person) {

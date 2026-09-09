@@ -20,7 +20,7 @@ use RRZE\Cris\Sync;
 /**
  * Plugin Name: FAU CRIS
  * Description: Anzeige von Daten aus dem FAU-Forschungsportal CRIS in WP-Seiten
- * Version: 3.29.14
+ * Version: 3.29.15
  * Author: RRZE-Webteam
  * Author URI: http://blogs.fau.de/webworking/
  * Text Domain: fau-cris
@@ -81,7 +81,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.29.14';
+    const version = '3.29.15';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
@@ -1034,11 +1034,11 @@ public static function options_fau_cris(): void
         $page_lang = Tools::getPageLanguage($post->ID);
         if (isset($parameter['show']) && $parameter['show'] == 'sdg') {
             // Nachhaltigkeit / UN Sustainable Development Goals
-            $liste = new Sustainability($parameter['entity'], $parameter['sdg'], $page_lang, $parameter['display_language']);
+            $liste = new Sustainability($parameter['sdg'], $page_lang, $parameter['display_language']);
             if (isset($liste->error) && is_wp_error($liste->error)) {
                 return $liste->error->get_error_message();
             }
-            return $liste->singleSDG($parameter['hide']);
+            return $liste->singleSDG($parameter['hide'], $parameter['hstart']);
         } elseif (isset($parameter['show']) && $parameter['show'] == 'standardizations') {
             // Standardisierung
             $liste = new Standardisierungen($parameter['entity'], $parameter['entity_id'], $page_lang, $parameter['display_language']);
@@ -1348,6 +1348,7 @@ public static function options_fau_cris(): void
             'organisation' => $options['cris_org_nr'],
             'standardization' => '',
             'sdg' => '',
+            'hstart' => 2,
             'projects_status'=>'',
             'projects_start'=>'',
             'author_position'=>'',
@@ -1378,6 +1379,7 @@ public static function options_fau_cris(): void
         $sc_param['activity'] = sanitize_text_field($activity);
         $sc_param['field'] = sanitize_text_field($field);
         $sc_param['sdg'] = sanitize_text_field($sdg);
+        $sc_param['hstart'] = absint($hstart);
         $sc_param['show'] = sanitize_text_field($show);
         if ($type == 'weitere') {
             $type = 'andere';
