@@ -976,7 +976,20 @@ class Projekte
 
     //  End::make_list
 
-    private function make_accordion($projects, $hide = array(), $showtype = 1)
+    /*
+     * Render a project accordion for a caller outside this class, optionally
+     * annotated with SDG tags. Keeps the accordion markup in one place instead
+     * of duplicating it per consumer.
+     *
+     * $sdgTags is keyed by project ID; each entry is a list of
+     * ['code' => ..., 'name' => ..., 'url' => ...].
+     */
+    public function projectAccordion($projects, $hide = array(), $sdgTags = array()): string
+    {
+        return $this->make_accordion($projects, $hide, 1, $sdgTags);
+    }
+
+    private function make_accordion($projects, $hide = array(), $showtype = 1, $sdgTags = array())
     {
         global $post;
         $lang_key = ($this->page_lang == 'en') ? '_en' : '';
@@ -1022,11 +1035,14 @@ class Projekte
             $type = Tools::getName('projects', $project['project type'], $this->page_lang);
 
 
-            $projlist .= "[accordion-item title='" . 
-                ((!empty($acronym) && !in_array('acrotitle', $hide)) ? $acronym . ": " : "") 
+            $projlist .= "[accordion-item title='" .
+                ((!empty($acronym) && !in_array('acrotitle', $hide)) ? $acronym . ": " : "")
                 . $title_shortcode . "']";
-            
-            
+
+            if (!empty($sdgTags[$id])) {
+                $projlist .= $this->render_sdg_tags($sdgTags[$id]);
+            }
+
             if (!in_array('date', $hide)) {            
             $start = $project['cfstartdate'];
             if (!in_array('end', $hide)) {
@@ -1095,6 +1111,34 @@ class Projekte
         }
         $projlist .= "[/accordion]";
         return do_shortcode($projlist);
+    }
+
+    /*
+     * SDG tags for a single project. The code is the visible label; the long
+     * name goes into the link title so the tag is understandable on its own.
+     */
+    private function render_sdg_tags($tags): string
+    {
+        $output = '<p class="cris-sdg-tags">';
+        foreach ($tags as $tag) {
+            $label = isset($tag['code']) ? trim((string) $tag['code']) : '';
+            if ($label === '') {
+                continue;
+            }
+            $name = isset($tag['name']) ? trim((string) $tag['name']) : '';
+            $url = isset($tag['url']) ? (string) $tag['url'] : '';
+            if ($url !== '') {
+                $output .= '<a class="cris-sdg-tag" href="' . esc_url($url) . '"'
+                    . ($name !== '' ? ' title="' . esc_attr($name) . '"' : '')
+                    . '>' . esc_html($label) . '</a> ';
+            } else {
+                $output .= '<span class="cris-sdg-tag"'
+                    . ($name !== '' ? ' title="' . esc_attr($name) . '"' : '')
+                    . '>' . esc_html($label) . '</span> ';
+            }
+        }
+        $output .= '</p>';
+        return $output;
     }
 
     function my_plugin_inline_css() {

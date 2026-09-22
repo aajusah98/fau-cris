@@ -13,6 +13,7 @@ use RRZE\Cris\Publikationen;
 use RRZE\Cris\Aktivitaeten;
 use RRZE\Cris\Patente;
 use RRZE\Cris\Sustainability;
+use RRZE\Cris\Personen;
 use RRZE\Cris\Sync;
 
 
@@ -20,7 +21,7 @@ use RRZE\Cris\Sync;
 /**
  * Plugin Name: FAU CRIS
  * Description: Anzeige von Daten aus dem FAU-Forschungsportal CRIS in WP-Seiten
- * Version: 3.29.15
+ * Version: 3.29.16
  * Author: RRZE-Webteam
  * Author URI: http://blogs.fau.de/webworking/
  * Text Domain: fau-cris
@@ -81,7 +82,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.29.15';
+    const version = '3.29.16';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
@@ -1039,6 +1040,15 @@ public static function options_fau_cris(): void
                 return $liste->error->get_error_message();
             }
             return $liste->singleSDG($parameter['hide'], $parameter['hstart']);
+        } elseif (isset($parameter['show']) && $parameter['show'] == 'person') {
+            // Single person with their projects. Uses persid rather than the
+            // resolved entity_id, which falls back to the configured org number
+            // when no person was given and would query that as a person.
+            $liste = new Personen($parameter['persid'], $page_lang, $parameter['display_language']);
+            if (isset($liste->error) && is_wp_error($liste->error)) {
+                return $liste->error->get_error_message();
+            }
+            return $liste->singlePerson($parameter);
         } elseif (isset($parameter['show']) && $parameter['show'] == 'standardizations') {
             // Standardisierung
             $liste = new Standardisierungen($parameter['entity'], $parameter['entity_id'], $page_lang, $parameter['display_language']);
@@ -1348,6 +1358,8 @@ public static function options_fau_cris(): void
             'organisation' => $options['cris_org_nr'],
             'standardization' => '',
             'sdg' => '',
+            'person' => '',
+            'filter' => '',
             'hstart' => 2,
             'projects_status'=>'',
             'projects_start'=>'',
@@ -1370,7 +1382,10 @@ public static function options_fau_cris(): void
 
         $sc_param['orderby'] = sanitize_text_field($orderby);
         $sc_param['orgid'] = $orgid;
-        $sc_param['persid'] = sanitize_text_field($persid);
+        // "person" is an alias for the established "persid" attribute, so the
+        // syntax used in the CRIS issue examples works as well.
+        $sc_param['persid'] = sanitize_text_field($persid) ?: sanitize_text_field($person);
+        $sc_param['filter'] = sanitize_text_field($filter);
         $sc_param['publication'] = sanitize_text_field($publication);
         $sc_param['award'] = sanitize_text_field($award);
         $sc_param['awardnameid'] = sanitize_text_field($awardnameid);
