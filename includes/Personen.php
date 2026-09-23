@@ -12,10 +12,14 @@ use RRZE\Cris\Filter;
  *
  * Shortcode usage: [cris show=person person=315785366 filter=sdg]
  *
- * Renders the person via the FAU Person plugin card (with picture) when a local
- * person page exists, otherwise a link into CRIS, followed by the person's
- * projects as an accordion. With filter=sdg each project additionally carries
- * the codes of the UN SDGs it is related to.
+ * Below the person's name comes their language-specific UNSDGDescription
+ * statement, shortened to a teaser with a read-more disclosure, then the FAU
+ * Person plugin card (with picture) when a local person page exists or a link
+ * into CRIS when it does not, then their projects as an accordion. With
+ * filter=sdg each project additionally carries the codes of the UN SDGs it is
+ * related to.
+ *
+ * hide accepts title, card, sdgdescription and projects.
  */
 class Personen
 {
@@ -25,6 +29,12 @@ class Personen
      * provisional and is expected to change, so it is defined once here.
      */
     public const SDG_PUBLICWEB_SEGMENT = 'UNSDG';
+
+    /*
+     * Characters of the person's UNSDGDescription shown before the read-more
+     * disclosure takes over.
+     */
+    public const SDG_DESCRIPTION_TEASER_LENGTH = 300;
 
     private array $options;
     public $cms;
@@ -143,6 +153,10 @@ class Personen
                 $output .= "<h{$hTitle} class=\"cris-person-title\">" . esc_html(trim($firstname . ' ' . $lastname)) . "</h{$hTitle}>";
             }
 
+            if (!in_array('sdgdescription', $hidden, true)) {
+                $output .= $this->make_sdg_description($person);
+            }
+
             if (!in_array('card', $hidden, true)) {
                 $output .= $this->make_card($person['ID'], $firstname, $lastname);
             }
@@ -172,6 +186,114 @@ class Personen
         }
         $output .= "</div>";
 
+        return $output;
+    }
+
+    /*
+     * The person's own statement on their contribution to the UN SDGs. CRIS
+     * carries it as UNSDGDescription in both languages, so the English page
+     * falls back to the German text when the English one has not been filled
+     * in, as with every other language-specific attribute here.
+     *
+     * The value is plain text with line breaks, so each line becomes its own
+     * paragraph rather than one block with collapsed newlines. Only the first
+     * SDG_DESCRIPTION_TEASER_LENGTH characters are shown; expanding replaces
+     * that teaser with the full statement instead of appending a second block,
+     * so the text grows in place rather than reading as another field. The
+     * disclosure is the native element, which needs no JavaScript and stays
+     * keyboard accessible; the lang attribute carries the language the text was
+     * picked in, which drives hyphenation of the justified paragraphs and tells
+     * screen readers which voice to use.
+     */
+    private function make_sdg_description($person): string
+    {
+        $lang = 'de';
+        $text = $person['unsdgdescription'] ?? '';
+        if ($this->page_lang == 'en' && !empty($person['unsdgdescription_en'])) {
+            $lang = 'en';
+            $text = $person['unsdgdescription_en'];
+        }
+
+        $text = str_replace(array("\r\n", "\r"), "\n", (string) $text);
+        $lines = array_values(array_filter(array_map('trim', explode("\n", $text)), static function ($line) {
+            return $line !== '';
+        }));
+        if (!count($lines)) {
+            return '';
+        }
+
+        list($teaser, $rest) = $this->split_sdg_description($lines);
+        $output = "<div class=\"cris-person-sdgdescription\" lang=\"" . esc_attr($lang) . "\">";
+
+        if (!count($rest)) {
+            return $output . $this->description_paragraphs($lines) . "</div>";
+        }
+
+        // The disclosure comes first in the markup so that the teaser can be
+        // hidden with a sibling selector once it is open; the stylesheet puts
+        // the two back in reading order.
+        $output .= "<details class=\"cris-person-sdgdescription-more\">";
+        $output .= "<summary>"
+            . "<span class=\"cris-person-sdgdescription-more-label\">" . esc_html__('Weiterlesen', 'fau-cris') . "</span>"
+            . "<span class=\"cris-person-sdgdescription-less-label\">" . esc_html__('Weniger anzeigen', 'fau-cris') . "</span>"
+            . "</summary>";
+        $output .= "<div class=\"cris-person-sdgdescription-full\">" . $this->description_paragraphs($lines) . "</div>";
+        $output .= "</details>";
+        $output .= "<div class=\"cris-person-sdgdescription-teaser\">"
+            . $this->description_paragraphs($teaser, ' &hellip;')
+            . "</div>";
+        $output .= "</div>";
+
+        return $output;
+    }
+
+    /*
+     * Split the statement into the visible teaser and the part behind the
+     * disclosure, cutting at the last word boundary that still fits so that no
+     * word is broken in half. A line without any space stays whole rather than
+     * being cut mid-word.
+     */
+    private function split_sdg_description($lines): array
+    {
+        $teaser = array();
+        $rest = array();
+        $budget = self::SDG_DESCRIPTION_TEASER_LENGTH;
+
+        foreach ($lines as $line) {
+            if ($budget <= 0) {
+                $rest[] = $line;
+                continue;
+            }
+            if (mb_strlen($line) <= $budget) {
+                $teaser[] = $line;
+                $budget -= mb_strlen($line);
+                continue;
+            }
+
+            // The space is ASCII, so looking for it byte-wise cannot land in
+            // the middle of a multibyte character.
+            $keep = mb_substr($line, 0, $budget);
+            $space = strrpos($keep, ' ');
+            $keep = ($space !== false) ? substr($keep, 0, $space) : $line;
+            $teaser[] = $keep;
+
+            $remainder = trim(mb_substr($line, mb_strlen($keep)));
+            if ($remainder !== '') {
+                $rest[] = $remainder;
+            }
+            $budget = 0;
+        }
+
+        return array($teaser, $rest);
+    }
+
+    private function description_paragraphs($lines, $suffix = ''): string
+    {
+        $output = '';
+        $last = count($lines) - 1;
+        foreach (array_values($lines) as $i => $line) {
+            $output .= "<p>" . esc_html($line) . ($i === $last ? $suffix : '') . "</p>";
+        }
         return $output;
     }
 
