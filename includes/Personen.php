@@ -25,12 +25,6 @@ class Personen
 {
 
     /*
-     * Path segment of the CRIS public web fallback for an SDG. This address is
-     * provisional and is expected to change, so it is defined once here.
-     */
-    public const SDG_PUBLICWEB_SEGMENT = 'UNSDG';
-
-    /*
      * Characters of the person's UNSDGDescription shown before the read-more
      * disclosure takes over.
      */
@@ -377,7 +371,6 @@ class Personen
      */
     private function get_project_sdgs($projects): array
     {
-        global $post;
         $tags = array();
 
         foreach ($projects as $project) {
@@ -409,13 +402,7 @@ class Personen
                 $tags[$projectID][] = array(
                     'code' => $code,
                     'name' => $name,
-                    'url' => Tools::get_item_url(
-                        self::SDG_PUBLICWEB_SEGMENT,
-                        $name,
-                        $sdg->ID,
-                        $post->ID ?? '',
-                        $this->page_lang
-                    )
+                    'url' => Tools::get_sdg_url($code, $this->page_lang)
                 );
             }
         }

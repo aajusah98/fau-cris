@@ -10,9 +10,17 @@ use RRZE\Cris\Dicts;
 
 class Tools
 {
-    //This is an whitelist variable for strip_tags function 
+    //This is an whitelist variable for strip_tags function
 
     public static string $whitelist_tags = '<div><br><a><sup><sub><p><ul><ol><li><h3><h1><h2><i><strong><em><style><u><font>';
+
+    /*
+     * Pages of the UN sustainable development goals on the central FAU
+     * sustainability site, one per language, with the goal number filled in.
+     */
+    public const sdg_url_de = 'https://www.sustainability.fau.de/ziele/ziel-%d/';
+    public const sdg_url_en = 'https://www.sustainability.fau.de/en/sdgs/sdg-%d/';
+    public const sdg_count = 17;
 
     public static function getAcronym($acadTitle): string
     {
@@ -892,6 +900,28 @@ public static function sortByKey(array &$array, string $key): void {
         } else {
             return FAU_CRIS::cris_publicweb . $item . "/" . $cris_id . ($lang == 'de' ? '?lang=de_DE' : '?lang=en_GB');
         }
+    }
+
+    /*
+     * Central FAU page of a UN sustainable development goal, derived from its
+     * CRIS code ("SDG 3"). The goals are numbered 1 to 17 and anything outside
+     * that range has no page, so an unusable code yields no link rather than
+     * one that 404s; the callers render the code as plain text then.
+     */
+    public static function get_sdg_url($code, $lang = 'de'): string
+    {
+        if (!preg_match('/(\d{1,2})/', (string) $code, $matches)) {
+            return '';
+        }
+
+        $number = (int) $matches[1];
+        if ($number < 1 || $number > self::sdg_count) {
+            return '';
+        }
+
+        return $lang == 'en'
+            ? sprintf(self::sdg_url_en, $number)
+            : sprintf(self::sdg_url_de, $number);
     }
 
     public static function numeric_xml_encode($text, $double_encode = true): string

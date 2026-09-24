@@ -1114,31 +1114,33 @@ class Projekte
     }
 
     /*
-     * SDG tags for a single project. The code is the visible label; the long
-     * name goes into the link title so the tag is understandable on its own.
+     * SDG tags for a single project. Code and name form the visible label, as
+     * in the heading of the sustainability component, and link to the goal's
+     * page on the central FAU site. Several tags are separated by commas, which
+     * keeps them apart once the names wrap across lines.
      */
     private function render_sdg_tags($tags): string
     {
-        $output = '<p class="cris-sdg-tags">';
+        $items = array();
         foreach ($tags as $tag) {
-            $label = isset($tag['code']) ? trim((string) $tag['code']) : '';
-            if ($label === '') {
+            $code = isset($tag['code']) ? trim((string) $tag['code']) : '';
+            if ($code === '') {
                 continue;
             }
             $name = isset($tag['name']) ? trim((string) $tag['name']) : '';
             $url = isset($tag['url']) ? (string) $tag['url'] : '';
-            if ($url !== '') {
-                $output .= '<a class="cris-sdg-tag" href="' . esc_url($url) . '"'
-                    . ($name !== '' ? ' title="' . esc_attr($name) . '"' : '')
-                    . '>' . esc_html($label) . '</a> ';
-            } else {
-                $output .= '<span class="cris-sdg-tag"'
-                    . ($name !== '' ? ' title="' . esc_attr($name) . '"' : '')
-                    . '>' . esc_html($label) . '</span> ';
-            }
+
+            $label = esc_html($code) . ($name !== '' ? ' &ndash; ' . esc_html($name) : '');
+            $items[] = $url !== ''
+                ? '<a class="cris-sdg-tag" href="' . esc_url($url) . '">' . $label . '</a>'
+                : '<span class="cris-sdg-tag">' . $label . '</span>';
         }
-        $output .= '</p>';
-        return $output;
+
+        if (!count($items)) {
+            return '';
+        }
+
+        return '<p class="cris-sdg-tags">' . implode(', ', $items) . '</p>';
     }
 
     function my_plugin_inline_css() {
