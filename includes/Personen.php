@@ -165,19 +165,13 @@ class Personen
     }
 
     /*
-     * Person representation: the FAU Person card with picture when a local page
-     * exists, a CRIS link otherwise.
+     * Person representation: the local person card with picture when a page
+     * exists in FAUdir or FAU Person, a CRIS link otherwise.
      */
     private function make_card($persID, $firstname, $lastname): string
     {
-        $pid = Tools::person_exists($this->cms, $firstname, $lastname, array(), $this->name_order_plugin);
-
         $output = "<div class=\"cris-person-card\">";
-        if ($this->cms == 'wp' && $pid) {
-            $output .= do_shortcode('[person id="' . intval($pid) . '" format="card"]');
-        } else {
-            $output .= Tools::get_person_link($persID, $firstname, $lastname, 'cris', $this->cms, '', array(), 0);
-        }
+        $output .= Tools::get_person_card($persID, $firstname, $lastname, $this->cms, $this->name_order_plugin);
         $output .= "</div>";
 
         return $output;

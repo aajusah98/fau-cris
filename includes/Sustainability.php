@@ -228,16 +228,9 @@ class Sustainability
             $firstname = $person->attributes['cffirstnames'] ?? '';
             $lastname = $person->attributes['cffamilynames'] ?? '';
 
-            $pid = Tools::person_exists($this->cms, $firstname, $lastname, array(), $this->name_order_plugin);
-
             $output .= "<li class=\"cris-sdg-person\">";
-            if ($this->cms == 'wp' && $pid) {
-                // Lokale FAU-Person-Seite vorhanden: Karte mit Bild ausgeben.
-                $output .= do_shortcode('[person id="' . intval($pid) . '" format="card"]');
-            } else {
-                // Keine lokale Seite: Name mit Link ins CRIS.
-                $output .= Tools::get_person_link($person->ID, $firstname, $lastname, 'cris', $this->cms, '', array(), 0);
-            }
+            // Card from a local person page when one exists, CRIS link otherwise.
+            $output .= Tools::get_person_card($person->ID, $firstname, $lastname, $this->cms, $this->name_order_plugin);
             $output .= "</li>";
         }
 
