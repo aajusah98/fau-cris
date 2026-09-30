@@ -828,13 +828,13 @@ public static function sortByKey(array &$array, string $key): void {
      * migrated yet, and a plain CRIS link is the last resort. Both plugins may
      * be active at the same time, so neither is assumed to be present.
      */
-    public static function get_person_card($id, $firstname, $lastname, $cms, $nameorder = ''): string
+    public static function get_person_card($id, $firstname, $lastname, $cms, $nameorder = '', $faudir_format = 'compact'): string
     {
         if ($cms == 'wp') {
             // The format is per source: FAU Person has no compact format, so
             // its nearest equivalent is used there.
             $sources = array(
-                'faudir' => array('post_type' => self::faudir_post_type(), 'format' => 'compact'),
+                'faudir' => array('post_type' => self::faudir_post_type(), 'format' => $faudir_format),
                 'person' => array('post_type' => 'person', 'format' => 'card'),
             );
 

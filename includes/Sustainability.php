@@ -222,19 +222,19 @@ class Sustainability
 
         $output = "<div class=\"cris-sdg-persons\">";
         $output .= "<h{$hSub} class=\"cris-sdg-persons-title\">" . esc_html__('Beitragende Wissenschaftler/-innen', 'fau-cris') . "</h{$hSub}>";
-        $output .= "<ul class=\"cris-sdg-persons-list\">";
+        $output .= "<div class=\"cris-sdg-persons-cards\">";
 
         foreach ($persons as $person) {
             $firstname = $person->attributes['cffirstnames'] ?? '';
             $lastname = $person->attributes['cffamilynames'] ?? '';
 
-            $output .= "<li class=\"cris-sdg-person\">";
+            $output .= "<div class=\"cris-sdg-person-card\">";
             // Card from a local person page when one exists, CRIS link otherwise.
-            $output .= Tools::get_person_card($person->ID, $firstname, $lastname, $this->cms, $this->name_order_plugin);
-            $output .= "</li>";
+            $output .= Tools::get_person_card($person->ID, $firstname, $lastname, $this->cms, $this->name_order_plugin, 'card');
+            $output .= "</div>";
         }
 
-        $output .= "</ul>";
+        $output .= "</div>";
         $output .= "</div>";
         return $output;
     }

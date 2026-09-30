@@ -189,6 +189,16 @@ div.cris-standardization {
     padding: 20px;
 }
 
+.cris-sdg-persons-cards {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.cris-sdg-person-card {
+    min-width: 0;
+}
+
 /* The person's UN SDG statement. Justified with hyphenation, which needs the
    lang attribute the markup carries, otherwise justification tears gaps into
    long German compounds. */

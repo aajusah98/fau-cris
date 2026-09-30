@@ -21,7 +21,7 @@ use RRZE\Cris\Sync;
 /**
  * Plugin Name: FAU CRIS
  * Description: Anzeige von Daten aus dem FAU-Forschungsportal CRIS in WP-Seiten
- * Version: 3.29.21
+ * Version: 3.29.22
  * Author: RRZE-Webteam
  * Author URI: http://blogs.fau.de/webworking/
  * Text Domain: fau-cris
@@ -82,7 +82,7 @@ class FAU_CRIS
     /**
      * Get Started
      */
-    const version = '3.29.21';
+    const version = '3.29.22';
     const option_name = '_fau_cris';
     const version_option_name = '_fau_cris_version';
     const textdomain = 'fau-cris';
@@ -114,6 +114,9 @@ class FAU_CRIS
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array(__CLASS__, 'add_action_links'));
 
         add_action('wp_enqueue_scripts', array(__CLASS__, 'cris_enqueue_styles'));
+        // Registered here rather than in cris_enqueue_styles(), because FAUdir
+        // decides at priority 5 and this plugin enqueues at the default 10.
+        add_filter('rrze_faudir/enqueue_frontend_on_demand', array(__CLASS__, 'faudir_needs_frontend'), 10, 2);
 
         add_shortcode('cris', array(__CLASS__, 'cris_shortcode'));
         add_shortcode('cris-custom', array(__CLASS__, 'cris_custom_shortcode'));
@@ -1620,6 +1623,25 @@ public static function options_fau_cris(): void
             wp_enqueue_style('cris', plugins_url('css/cris.css', __FILE__), array(), self::version);
             wp_enqueue_script('cris', plugins_url('js/cris.js', __FILE__), array('jquery'), self::version,false);
         }
+    }
+
+    /*
+     * FAUdir loads its stylesheet only when it finds its own shortcode in the
+     * post content. Person cards rendered by this plugin are produced while the
+     * content is filtered, long after that check, so the cards would come out
+     * unstyled. Answering FAUdir's own filter marks the page as needing the
+     * stylesheet in time for it to land in the head.
+     */
+    public static function faudir_needs_frontend($needs, $post = null)
+    {
+        if ($needs) {
+            return $needs;
+        }
+        if (!$post instanceof \WP_Post || empty($post->post_content)) {
+            return $needs;
+        }
+        return has_shortcode($post->post_content, 'cris')
+            || has_shortcode($post->post_content, 'cris-custom');
     }
 
     /*
