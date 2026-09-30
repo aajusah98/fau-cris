@@ -315,12 +315,14 @@ class Personen
             return '';
         }
 
-        // Only filter=sdg triggers the per-project SDG requests; without it this
-        // view costs no additional webservice calls. The filter both restricts
-        // the list to projects related to an SDG and supplies their tags.
-        $sdgTags = array();
+        // Always fetch SDG tags so that projects show their SDG links
+        // regardless of whether filter=sdg is set. Each per-project CRIS
+        // request is cached individually by RemoteGet.
+        $sdgTags = $this->get_project_sdgs($projects);
+
+        // filter=sdg restricts the list to SDG-related projects only;
+        // without the filter all projects are shown, with tags where they exist.
         if (($param['filter'] ?? '') === 'sdg') {
-            $sdgTags = $this->get_project_sdgs($projects);
             $projects = $this->only_tagged($projects, $sdgTags);
             if (!count($projects)) {
                 return '';
